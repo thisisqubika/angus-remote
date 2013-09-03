@@ -128,9 +128,7 @@ module Picasso
           return @service_definitions_cache[[code_name, version]]
         end
 
-        definition_hash = get_service_definition_hash(code_name, version)
-
-        service_definition = Picasso::SDoc::DefinitionsReader.build_service_definition(definition_hash)
+        service_definition = self.get_service_definition(code_name, version)
         @service_definitions_cache[[code_name, version]] = service_definition
       end
 
@@ -155,7 +153,7 @@ module Picasso
 
         proxy_doc_url = self.proxy_doc_url(code_name, version, remote_code_name)
 
-        definition_hash = fetch_service_definition(proxy_doc_url)
+        definition_hash = fetch_remote_service_definition(proxy_doc_url)
 
         proxy_service_definition = Picasso::SDoc::DefinitionsReader.build_service_definition(definition_hash)
 
@@ -171,22 +169,26 @@ module Picasso
       #
       # @raise (see .service_version)
       #
-      # @return [Hash]
-      def self.get_service_definition_hash(code_name, version = nil)
+      # @return [Picasso::Sdoc::Definitions::Service]
+      def self.get_service_definition(code_name, version = nil)
         version ||= service_version(code_name)
-
         doc_url = self.doc_url(code_name, version)
 
-        fetch_service_definition(doc_url)
+        if doc_url.match('file://(.*)') || doc_url.match('file:///(.*)')
+          Picasso::SDoc::DefinitionsReader.service_definition($1)
+        else
+          definition_hash = fetch_remote_service_definition(doc_url)
+          Picasso::SDoc::DefinitionsReader.build_service_definition(definition_hash)
+        end
       end
 
-      # Fetches a service definition uri.
+      # Fetches a service definition from a remote http uri.
       #
       # @param [String] uri URI that publishes a service definition.
       #   That uri should handle JSON format.
       #
       # @return [Hash] Service definition hash
-      def self.fetch_service_definition(uri)
+      def self.fetch_remote_service_definition(uri)
         uri = URI(uri)
         uri.query = URI.encode_www_form({:format => :json})
 
@@ -207,7 +209,7 @@ module Picasso
       rescue Exception
         raise RemoteConnectionError.new(uri)
       end
-      private_class_method :fetch_service_definition
+      private_class_method :fetch_remote_service_definition
 
     end
 

@@ -50,7 +50,7 @@ describe Picasso::Remote::Builder do
 
         before do
           Picasso::Remote::ServiceDirectory.stub(:service_configuration => service_configuration)
-          Picasso::Remote::ServiceDirectory.stub(:fetch_service_definition => service_def)
+          Picasso::Remote::ServiceDirectory.stub(:fetch_remote_service_definition => service_def)
         end
 
         it 'makes a request to the remote service' do
@@ -62,8 +62,8 @@ describe Picasso::Remote::Builder do
         describe 'the generated proxy operation' do
 
           before do
-            Picasso::Remote::ServiceDirectory.stub(:service_configuration => { 'v0.1' => { 'doc_url' => 'some_utl/doc', 'api_url' => 'some_utl/api' } })
-            Picasso::Remote::ServiceDirectory.stub(:fetch_service_definition => { 'service' => { 'service' => 'vpos'  }, 'code_name' => 'vpos', 'version' => '0.1', 'operations' => { 'get_users_proxy' => { 'name' => 'Obtener usuarios'} } })
+            Picasso::Remote::ServiceDirectory.stub(:service_configuration => { 'v0.1' => { 'doc_url' => 'some_utl/doc', 'api_url' => 'some_url/api' } })
+            Picasso::Remote::ServiceDirectory.stub(:fetch_remote_service_definition => { 'service' => { 'service' => 'vpos'  }, 'code_name' => 'vpos', 'version' => '0.1', 'operations' => { 'get_users_proxy' => { 'name' => 'Obtener usuarios'} } })
           end
 
           it 'makes a request to the remote service' do
