@@ -24,7 +24,7 @@ module Picasso
         # The r parameter should contain in the body, encoded as json, the values / objects
         # specified in the operation response metadata
         #
-        # @param status_code [Integer] HTTP status_code
+        # @param [Integer] status_code HTTP status_code
         # @param body [String] HTTP body
         # @param service_name [String] Name of the service that the response belongs to
         # @param version [String] Version of the service that the response belongs to
@@ -36,8 +36,9 @@ module Picasso
         #
         #   Also, provides one method for each value / object / array returned
         def self.build(status_code, body, service_code_name, version, operation_code_name)
-
-          service_definition = Picasso::Remote::ServiceDirectory.service_definition(service_code_name, version)
+          service_definition = Picasso::Remote::ServiceDirectory.service_definition(
+            service_code_name, version
+          )
 
           representations = service_definition.representations
           glossary = service_definition.glossary
@@ -63,7 +64,8 @@ module Picasso
           glossary_terms_hash = glossary.terms_hash
 
           operation_definition.response_elements.each do |element|
-            self.build_response_method(json_response, response_class, response, representations_hash, glossary_terms_hash, element)
+            self.build_response_method(json_response, response_class, response,
+                                       representations_hash, glossary_terms_hash, element)
           end
 
           response
@@ -73,7 +75,8 @@ module Picasso
         #
         # The r parameter should contain in the body, encoded as json, the values / objects
         # specified in the operation response metadata
-        def self.build_response_method(json_response, response_class, response, representations_hash, glossary_terms_hash, element)
+        def self.build_response_method(json_response, response_class, response,
+                                       representations_hash, glossary_terms_hash, element)
           if (json_response.has_key?(element.name))
             hash_value = json_response[element.name]
           elsif (element.required == false)
@@ -85,14 +88,19 @@ module Picasso
           object_value = nil
 
           if element.type && representations_hash.include?(element.type)
-            object_value = self.build_from_representation(hash_value, element.type, representations_hash, glossary_terms_hash)
+            object_value = self.build_from_representation(hash_value, element.type,
+                                                          representations_hash, glossary_terms_hash)
           elsif element.elements_type
-            object_value = self.build_collection_from_representation(hash_value, element.elements_type, representations_hash, glossary_terms_hash)
+            object_value = self.build_collection_from_representation(hash_value,
+                                                                     element.elements_type,
+                                                                     representations_hash,
+                                                                     glossary_terms_hash)
           elsif element.type && element.type.to_sym == :variable
             object_value = self.build_from_variable_fields(hash_value)
           elsif element.type
             begin
-              object_value = Picasso::Unmarshalling.unmarshal_scalar(hash_value, element.type.to_sym)
+              object_value = Picasso::Unmarshalling.unmarshal_scalar(hash_value,
+                                                                     element.type.to_sym)
             rescue ArgumentError
               object_value = nil
             end
@@ -115,13 +123,14 @@ module Picasso
         # encoded as json, the values / objects
         # specified in the operation response metadata.
         #
-        # @param remote_response HTTP response object, must respond to methods :body and :code
-        # @param service_name [String] Name of the invoked service
+        # @param [Http] remote_response HTTP response object, must respond to methods :body and :code
+        # @param [String] service_name  Name of the invoked service
         # @param version [String] Version of the invoked service
         # @param operation_name [String] Name of the invoked operation
         #
-        # @return @see #build
-        def self.build_from_remote_response(remote_response, service_code_name, version, operation_code_name)
+        # @return (see #build)
+        def self.build_from_remote_response(remote_response, service_code_name, version,
+                                            operation_code_name)
 
           status_code = remote_response.code
           body = remote_response.body
@@ -198,13 +207,19 @@ module Picasso
               field_value = nil
               unless field_raw_value.nil? && field.required == false
                 if field.type && representations.include?(field.type)
-                  field_value = self.build_from_representation(field_raw_value, field.type, representations, glossary_terms_hash)
+                  field_value = self.build_from_representation(field_raw_value, field.type,
+                                                               representations,
+                                                               glossary_terms_hash)
                 elsif field.elements_type
-                  field_value = self.build_collection_from_representation(field_raw_value, field.elements_type, representations, glossary_terms_hash)
+                  field_value = self.build_collection_from_representation(field_raw_value,
+                                                                          field.elements_type,
+                                                                          representations,
+                                                                          glossary_terms_hash)
                 elsif field.type && field.type.to_sym == :variable
                   field_value = self.build_from_variable_fields(field_raw_value)
                 elsif field.type
-                  field_value = Picasso::Unmarshalling.unmarshal_scalar(field_raw_value, field.type.to_sym)
+                  field_value = Picasso::Unmarshalling.unmarshal_scalar(field_raw_value,
+                                                                        field.type.to_sym)
                 end
               end
 
@@ -223,7 +238,8 @@ module Picasso
               representation_object = self.build_from_variable_fields(hash_value)
             else
               begin
-                representation_object = Picasso::Unmarshalling.unmarshal_scalar(hash_value, type.to_sym)
+                representation_object = Picasso::Unmarshalling.unmarshal_scalar(hash_value,
+                                                                                type.to_sym)
               rescue ArgumentError
                 representation_object = nil
               end
@@ -235,11 +251,13 @@ module Picasso
         end
 
         # Builds an array of objects that corresponds to the received type
-        def self.build_collection_from_representation(value_array, type, representations, glossary_terms_hash)
+        def self.build_collection_from_representation(value_array, type, representations,
+                                                      glossary_terms_hash)
           collection = []
 
           value_array.each do |raw_value|
-            collection << build_from_representation(raw_value, type, representations, glossary_terms_hash)
+            collection << build_from_representation(raw_value, type, representations,
+                                                    glossary_terms_hash)
           end
 
           collection
