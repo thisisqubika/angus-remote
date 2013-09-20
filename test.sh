@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 load() {
-  URL="https://raw.github.com/gist/3715020/5d78385a21487d4cae66f5406483c2539e933ca0/conditions.sh"
-  TMP_FILE="/tmp/5d78385a21487d4cae66f5406483c2539e933ca0_conditions.sh"
+  FILE_NAME="4a800b60b23cae4d2fd3e53d1ec76abe_conditions.sh"
+  URL="http://intranet.moove-it.com:8081/static/$FILE_NAME"
+  TMP_FILE="/tmp/$FILE_NAME"
   [ -f "$TMP_FILE" ] ||
     curl "$URL" 2>/dev/null -o "$TMP_FILE"
   source "$TMP_FILE"
