@@ -28,6 +28,7 @@ module Picasso
         # @param body [String] HTTP body
         # @param service_name [String] Name of the service that the response belongs to
         # @param version [String] Version of the service that the response belongs to
+        # @param operation_namespace [String] Namespace of the operation that the response belongs to
         # @param operation_name [String] Name of the operation that the response belongs to
         #
         # @return A Response object that responds to the methods:
@@ -35,14 +36,17 @@ module Picasso
         #   - messages
         #
         #   Also, provides one method for each value / object / array returned
-        def self.build(status_code, body, service_code_name, version, operation_code_name)
+        def self.build(status_code, body, service_code_name, version, operation_namespace,
+                       operation_code_name)
           service_definition = Picasso::Remote::ServiceDirectory.service_definition(
             service_code_name, version
           )
 
           representations = service_definition.representations
           glossary = service_definition.glossary
-          operation_definition = service_definition.operation_definition(operation_code_name)
+
+          operation_definition = service_definition.operation_definition(operation_namespace,
+                                                                         operation_code_name)
 
           json_response = JSON(body)
 
@@ -55,6 +59,7 @@ module Picasso
           response[:body] = body
           response[:service_code_name] = service_code_name
           response[:service_version] = version
+          response[:operation_namespace] = operation_namespace
           response[:operation_code_name] = operation_code_name
 
           response.status = json_response['status']
@@ -126,16 +131,18 @@ module Picasso
         # @param [Http] remote_response HTTP response object, must respond to methods :body and :code
         # @param [String] service_name  Name of the invoked service
         # @param version [String] Version of the invoked service
+        # @param operation_namespace [String] Namespace of the invoked operation
         # @param operation_name [String] Name of the invoked operation
         #
         # @return (see #build)
         def self.build_from_remote_response(remote_response, service_code_name, version,
-                                            operation_code_name)
+                                            operation_namespace, operation_code_name)
 
           status_code = remote_response.code
           body = remote_response.body
 
-          self.build(status_code, body, service_code_name, version, operation_code_name)
+          self.build(status_code, body, service_code_name, version, operation_namespace,
+                     operation_code_name)
         end
 
         # Searches for a short name in the glossary and returns the corresponding long name

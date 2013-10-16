@@ -13,8 +13,8 @@ describe Picasso::Remote::Builder do
     let(:operation) { double(:operation, :code_name=> 'get_users', :service_name => 'vpos', :path => '/users', :method => :get) }
     let(:proxy_operation) { double(:proxy_operation, :code_name=> 'get_users_proxy', :service_name => 'vpos', :path => '/users', :method => :get) }
     let(:glossary) { double(:glossary, :terms_hash_with_long_names => {}) }
-    let(:service_definition) { double(:vpos, :name => 'Vpos', :operations => [operation],
-                                      :proxy_operations => [proxy_operation], :version => '0.1', :glossary => glossary) }
+    let(:service_definition) { double(:vpos, :name => 'Vpos', :operations => { 'users' => [operation] },
+                                      :proxy_operations => { 'users' => [proxy_operation] }, :version => '0.1', :glossary => glossary) }
 
     let(:api_url) { 'http://localhost:8085/vpos/api/0.1/' }
 
@@ -43,7 +43,7 @@ describe Picasso::Remote::Builder do
         let(:service_def) {
           {
             'service' => { 'service' => 'vpos'  }, 'code_name' => 'vpos', 'version' => '0.1',
-            'operations' => { 'get_users' => { 'name' => 'Obtener usuarios'} }
+            'operations' => { 'users' => { 'get_users' => { 'name' => 'Obtener usuarios'} } }
           }
 
         }
@@ -62,8 +62,8 @@ describe Picasso::Remote::Builder do
         describe 'the generated proxy operation' do
 
           before do
-            Picasso::Remote::ServiceDirectory.stub(:service_configuration => { 'v0.1' => { 'doc_url' => 'some_utl/doc', 'api_url' => 'some_url/api' } })
-            Picasso::Remote::ServiceDirectory.stub(:fetch_remote_service_definition => { 'service' => { 'service' => 'vpos'  }, 'code_name' => 'vpos', 'version' => '0.1', 'operations' => { 'get_users_proxy' => { 'name' => 'Obtener usuarios'} } })
+            Picasso::Remote::ServiceDirectory.stub(:service_configuration => { 'v0.1' => { 'doc_url' => 'some_url/doc', 'api_url' => 'some_url/api' } })
+            Picasso::Remote::ServiceDirectory.stub(:fetch_remote_service_definition => { 'service' => { 'service' => 'vpos'  }, 'code_name' => 'vpos', 'version' => '0.1', 'operations' => { 'users' => { 'get_users_proxy' => { 'name' => 'Obtener usuarios' } } } })
           end
 
           it 'makes a request to the remote service' do

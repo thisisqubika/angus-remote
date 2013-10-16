@@ -1,7 +1,7 @@
 require 'json'
 require 'yaml'
 
-require 'picasso/sdoc'
+require 'angus/sdoc'
 
 require_relative 'builder'
 require_relative 'exceptions'
@@ -119,7 +119,7 @@ module Picasso
       #
       # @raise (see .service_version)
       #
-      # @return [Picasso::SDoc::Definitions::Service]
+      # @return [Angus::SDoc::Definitions::Service]
       def self.service_definition(code_name, version = nil)
         version ||= service_version(code_name)
 
@@ -141,7 +141,7 @@ module Picasso
       # @param [String] remote_code_name Remote service that implements operations for
       #   the proxy service
       #
-      # @return [Picasso::Sdoc::Definitions::Service]
+      # @return [Angus::SDoc::Definitions::Service]
       def self.join_proxy(code_name, version, remote_code_name)
 
         service_definition = self.service_definition(code_name, version)
@@ -155,7 +155,7 @@ module Picasso
 
         definition_hash = fetch_remote_service_definition(proxy_doc_url)
 
-        proxy_service_definition = Picasso::SDoc::DefinitionsReader.build_service_definition(definition_hash)
+        proxy_service_definition = Angus::SDoc::DefinitionsReader.build_service_definition(definition_hash)
 
         service_definition.merge(proxy_service_definition)
 
@@ -169,16 +169,16 @@ module Picasso
       #
       # @raise (see .service_version)
       #
-      # @return [Picasso::Sdoc::Definitions::Service]
+      # @return [Angus::SDoc::Definitions::Service]
       def self.get_service_definition(code_name, version = nil)
         version ||= service_version(code_name)
         doc_url = self.doc_url(code_name, version)
 
         if doc_url.match('file://(.*)') || doc_url.match('file:///(.*)')
-          Picasso::SDoc::DefinitionsReader.service_definition($1)
+          Angus::SDoc::DefinitionsReader.service_definition($1)
         else
           definition_hash = fetch_remote_service_definition(doc_url)
-          Picasso::SDoc::DefinitionsReader.build_service_definition(definition_hash)
+          Angus::SDoc::DefinitionsReader.build_service_definition(definition_hash)
         end
       end
 

@@ -13,7 +13,7 @@ module Picasso
       # Builds a client for a specific service.
       #
       # @param [String] code_name The service's name known to the service directory
-      # @param [Picasso::SDoc::Definitions::Service] service_definition
+      # @param [Angus::SDoc::Definitions::Service] service_definition
       # @param api_url Base service api url
       #
       # @return [Remote::Client] object that implements each method specified as operation
@@ -21,19 +21,33 @@ module Picasso
       def self.build(code_name, service_definition, api_url)
         remote_service_class = build_client_class(service_definition.name)
 
-        service_definition.operations.each do |operation|
-          self.define_operation(remote_service_class, operation, code_name, service_definition)
+        # TODO: define how to use the namespace in the remote client.
+        if service_definition.operations.is_a?(Hash)
+          service_definition.operations.each do |namespace, operations|
+            operations.each do |operation|
+              self.define_operation(remote_service_class, namespace, operation, code_name,
+                                    service_definition)
+            end
+          end
+        else
+          service_definition.operations.each do |operation|
+            self.define_operation(remote_service_class, code_name, operation, code_name,
+                                  service_definition)
+          end
         end
 
-        service_definition.proxy_operations.each do |operation|
-          self.define_proxy_operation(remote_service_class, operation, code_name,
-                                      service_definition)
+        service_definition.proxy_operations.each do |namespace, operations|
+          operations.each do |operation|
+            self.define_proxy_operation(remote_service_class, namespace, operation, code_name,
+                                        service_definition)
+          end
         end
 
         remote_service_class.new(api_url, self.default_timeout)
       end
 
-      def self.define_operation(client_class, operation, service_code_name, service_definition)
+      def self.define_operation(client_class, namespace, operation, service_code_name,
+                                service_definition)
         client_class.send :define_method, operation.code_name do |encode_as_json = false,
                                                                   path_params = nil,
                                                                   request_params = nil|
@@ -53,11 +67,13 @@ module Picasso
           Picasso::Remote::Response::Builder.build_from_remote_response(response,
                                                                         service_code_name,
                                                                         service_definition.version,
+                                                                        namespace,
                                                                         operation.code_name)
         end
       end
 
-      def self.define_proxy_operation(client_class, operation, service_code_name, service_definition)
+      def self.define_proxy_operation(client_class, namespace, operation, service_code_name,
+                                      service_definition)
         client_class.send :define_method, operation.code_name do |encode_as_json = false,
                                                                   path_params = nil,
                                                                   request_params = nil|
@@ -85,6 +101,7 @@ module Picasso
           Picasso::Remote::Response::Builder.build_from_remote_response(response,
                                                                         service_code_name,
                                                                         service_definition.version,
+                                                                        namespace,
                                                                         operation.code_name)
         end
       end

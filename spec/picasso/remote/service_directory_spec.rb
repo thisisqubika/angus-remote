@@ -25,11 +25,11 @@ describe Picasso::Remote::ServiceDirectory do
       let(:doc_url) { 'file://path/to/doc' }
 
       before do
-        Picasso::SDoc::DefinitionsReader.stub(:service_definition => service_definition)
+        Angus::SDoc::DefinitionsReader.stub(:service_definition => service_definition)
       end
 
       it 'builds the service definition from the path' do
-        Picasso::SDoc::DefinitionsReader.should_receive(
+        Angus::SDoc::DefinitionsReader.should_receive(
           :service_definition
         ).with('path/to/doc')
 
@@ -47,7 +47,7 @@ describe Picasso::Remote::ServiceDirectory do
 
       before do
         service_directory.stub(:fetch_remote_service_definition => definition_hash)
-        Picasso::SDoc::DefinitionsReader.stub(:build_service_definition => service_definition)
+        Angus::SDoc::DefinitionsReader.stub(:build_service_definition => service_definition)
       end
 
       it 'gets the definition hash from the remote service' do
@@ -59,7 +59,7 @@ describe Picasso::Remote::ServiceDirectory do
       end
 
       it 'builds the service definition from the definition hash' do
-        Picasso::SDoc::DefinitionsReader.should_receive(
+        Angus::SDoc::DefinitionsReader.should_receive(
           :build_service_definition
         ).with(definition_hash)
 
