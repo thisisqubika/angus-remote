@@ -1,20 +1,20 @@
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'picasso/remote/version'
+require 'angus/remote/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'picasso-remote'
-  spec.version       = Picasso::Remote::VERSION
+  spec.name          = 'angus-remote'
+  spec.version       = Angus::Remote::VERSION
   spec.platform      = Gem::Platform::RUBY
   spec.authors       = ['Adrian Gomez', 'Gianfranco Zas']
-  spec.email         = %W[picasso@moove-it.com]
+  spec.email         = %W[angus@moove-it.com]
   spec.summary       = 'Client for building service objects.'
   spec.description   = 'Provides support code for making requests and building responses'
   spec.homepage      = ''
   spec.license       = 'MIT'
 
   spec.files         = Dir.glob('{lib}/**/*')
-  spec.test_files    = Dir.glob('{spec/picasso}/**/*')
+  spec.test_files    = Dir.glob('{spec/angus}/**/*')
   spec.require_paths = %W[lib]
 
   spec.add_dependency 'persistent_http', '~> 1.0'

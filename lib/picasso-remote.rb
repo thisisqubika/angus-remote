@@ -1,4 +1,4 @@
-require 'picasso/remote/client'
-require 'picasso/remote/builder'
-require 'picasso/remote/service_directory'
-require 'picasso/remote/response/serializer'
+require 'angus/remote/client'
+require 'angus/remote/builder'
+require 'angus/remote/service_directory'
+require 'angus/remote/response/serializer'
