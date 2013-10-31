@@ -1,4 +1,5 @@
 *.log
+*.gem
 coverage/
 spec/reports/
 

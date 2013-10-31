@@ -10,13 +10,14 @@ Gem::Specification.new do |spec|
   spec.email         = %W[angus@moove-it.com]
   spec.summary       = 'Client for building service objects.'
   spec.description   = 'Provides support code for making requests and building responses'
-  spec.homepage      = ''
+  spec.homepage      = 'http://mooveit.github.io/angus'
   spec.license       = 'MIT'
 
   spec.files         = Dir.glob('{lib}/**/*')
   spec.test_files    = Dir.glob('{spec/angus}/**/*')
   spec.require_paths = %W[lib]
 
+  spec.add_dependency 'angus-sdoc', '~> 0.0'
   spec.add_dependency 'persistent_http', '~> 1.0'
   spec.add_dependency 'multipart-post', '~> 1.2'
 
