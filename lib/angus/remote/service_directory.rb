@@ -1,7 +1,9 @@
+require 'digest'
 require 'json'
 require 'yaml'
 
 require 'angus/sdoc'
+require 'angus/authentication/provider'
 
 require_relative 'builder'
 require_relative 'exceptions'
@@ -78,7 +80,7 @@ module Angus
 
         config = service_configuration(code_name)
 
-        config["v#{version}"]["api_url"]
+        config["v#{version}"]['api_url']
       end
 
       # Returns the configured version.
@@ -202,14 +204,27 @@ module Angus
         response = connection.start do |http|
           request = Net::HTTP::Get.new(uri.request_uri)
 
+          authentication_provider.prepare_request(request, 'GET', uri.path)
+
           http.request(request)
         end
+
+        authentication_provider.store_session_private_key(response)
 
         JSON(response.body)
       rescue Exception
         raise RemoteConnectionError.new(uri)
       end
       private_class_method :fetch_remote_service_definition
+
+      def self.authentication_provider
+        settings = { :public_key => Settings.public_key,
+                     :private_key => Settings.private_key,
+                     :store => Settings.redis }
+
+        @authentication_provider ||= Angus::Authentication::Provider.new(settings)
+      end
+      private_class_method :authentication_provider
 
     end
 

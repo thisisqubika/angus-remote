@@ -58,7 +58,9 @@ module Angus
           path_params = Angus::Remote::Builder.extract_var_arg!(args, Array) || []
           encode_as_json = Angus::Remote::Builder.extract_var_arg!(args, TrueClass) || false
 
-          request_params = Angus::Remote::Builder.apply_glossary(service_definition.glossary, request_params)
+          request_params = Angus::Remote::Builder.apply_glossary(service_definition.glossary,
+                                                                 request_params)
+
           request_params = Angus::Remote::Builder.escape_request_params(request_params)
 
           response = make_request(operation.path, operation.method, encode_as_json, path_params,
@@ -186,9 +188,9 @@ module Angus
           end
           encoded[encoded_name] = value
         end
+
         encoded
       end
-
 
       def self.default_timeout
         @default_timeout || DEFAULT_TIMEOUT

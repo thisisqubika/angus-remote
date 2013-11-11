@@ -5,6 +5,7 @@ require_relative 'exceptions'
 require_relative 'utils'
 
 require_relative 'response/builder'
+require_relative 'settings'
 
 module Angus
   module Remote
@@ -51,7 +52,11 @@ module Angus
         request = Utils.build_request(method, path, request_params, encode_as_json)
 
         begin
+          authentication_provider.prepare_request(request, method.upcase, path)
+
           response = @connection.request(request)
+
+          authentication_provider.store_session_private_key(response)
 
           if Utils.severe_error_response?(response)
             raise RemoteSevereError.new(get_error_messages(response.body))
@@ -73,6 +78,16 @@ module Angus
         json_response = JSON(response_body) rescue { 'messages' => [] }
         Response::Builder::build_messages(json_response['messages'])
       end
+
+
+      def authentication_provider
+        settings = { :public_key => Settings.public_key,
+                     :private_key => Settings.private_key,
+                     :store => Settings.redis }
+
+        @authentication_provider ||= Angus::Authentication::Provider.new(settings)
+      end
+
     end
 
   end

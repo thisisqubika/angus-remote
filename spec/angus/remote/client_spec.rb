@@ -17,11 +17,33 @@ describe Angus::Remote::Client do
 
   describe '#make_request' do
 
-    it 'returns the remote service response' do
-      response = double(:response, :code => 200, :body => '[]')
-      PersistentHTTP.any_instance.stub(:request => response)
+    let(:success_response) { double(:response, :code => 200, :body => '[]') }
+    let(:authentication_provider) { double(:authentication_provider) }
 
-      client.make_request('/users', 'get', false, [], {}).should eq(response)
+    before do
+      client.stub(:authentication_provider => authentication_provider)
+      authentication_provider.stub(:prepare_request => nil, :store_session_private_key => nil)
+      PersistentHTTP.any_instance.stub(:request => success_response)
+    end
+
+    it 'prepares the request with authentication' do
+      client.make_request('/users', 'get', false, [], {})
+
+      authentication_provider.should have_received(:prepare_request).with(kind_of(Net::HTTP::Get),
+                                                                          'GET', '//users')
+    end
+
+    it 'extracts the authentication data from the response' do
+      client.make_request('/users', 'get', false, [], {})
+
+      authentication_provider.should have_received(
+                                       :store_session_private_key
+                                     ).with(success_response)
+    end
+
+
+    it 'returns the remote service response' do
+      client.make_request('/users', 'get', false, [], {}).should eq(success_response)
     end
 
     context 'when an invalid method is used' do

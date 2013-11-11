@@ -20,10 +20,12 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'angus-sdoc', '~> 0.0'
   spec.add_dependency 'persistent_http', '~> 1.0'
   spec.add_dependency 'multipart-post', '~> 1.2'
+  spec.add_dependency 'redis'
 
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'fakefs', '~> 0.4'
   spec.add_development_dependency 'rspec', '~> 2.14'
+  spec.add_development_dependency 'mock_redis'
   spec.add_development_dependency 'simplecov', '~> 0.7'
   spec.add_development_dependency 'simplecov-rcov', '~> 0.2'
   spec.add_development_dependency 'simplecov-rcov-text', '~> 0.0'

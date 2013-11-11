@@ -13,3 +13,20 @@ SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
   SimpleCov::Formatter::RcovFormatter,
   SimpleCov::Formatter::RcovTextFormatter
 ]
+
+require 'redis'
+require 'mock_redis'
+
+RSpec.configure do |config|
+
+  redis = MockRedis.new
+
+  config.before do
+    Redis.stub(:new => redis)
+  end
+
+  config.after do
+    redis.flushdb
+  end
+
+end
