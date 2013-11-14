@@ -20,7 +20,7 @@ describe Angus::Remote::Builder do
 
     describe 'the returned class' do
 
-      subject(:client) { builder.build(code_name, service_definition, api_url) }
+      subject(:client) { builder.build(code_name, service_definition, api_url, {}) }
 
       it 'is of class Angus::Remote::Client' do
         should be_kind_of(Angus::Remote::Client)

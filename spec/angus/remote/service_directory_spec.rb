@@ -52,7 +52,7 @@ describe Angus::Remote::ServiceDirectory do
 
       it 'gets the definition hash from the remote service' do
         service_directory.should_receive(:fetch_remote_service_definition).with(
-          doc_url
+          doc_url, code_name, version
         ).and_return(definition_hash)
 
         service_directory.get_service_definition(code_name, version)

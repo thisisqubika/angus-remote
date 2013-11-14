@@ -6,9 +6,17 @@ module Angus
   module Authentication
     class Provider
 
+      DEFAULT_PUBLIC_KEY = '1234567'
+      DEFAULT_PRIVATE_KEY = 'CHANGE ME!!'
+
+      AUTHENTICATION_HEADER = 'AUTHORIZATION'
+      BAAS_AUTHENTICATION_HEADER = 'X-BAAS_AUTH'
+      BAAS_SESSION_HEADER = 'X-Baas-Session-Seed'
+      DATE_HEADER = 'DATE'
+
       def initialize(settings)
-        @public_key = settings[:public_key]
-        @private_key = settings[:private_key]
+        @public_key = settings[:public_key] || DEFAULT_PUBLIC_KEY
+        @private_key = settings[:private_key] || DEFAULT_PRIVATE_KEY
         @store = RedisStore.new(settings[:store] || {})
       end
 
@@ -16,11 +24,11 @@ module Angus
         date = Date.today
 
         auth_token = generate_auth_token(date, http_method, script_name)
-        request['DATE'] = date.httpdate
-        request['AUTHORIZATION'] = generate_auth_header(auth_token)
+        request[DATE_HEADER] = date.httpdate
+        request[AUTHENTICATION_HEADER] = generate_auth_header(auth_token)
 
         session_auth_token = generate_session_auth_token(date, http_method, script_name)
-        request['X_BAAS_AUTH'] = generate_auth_header(session_auth_token)
+        request[BAAS_AUTHENTICATION_HEADER] = generate_auth_header(session_auth_token)
       end
 
       def store_session_private_key(response)
@@ -42,7 +50,7 @@ module Angus
       end
 
       def extract_session_key_seed(response)
-        response['X-Baas-Session-Seed']
+        response[BAAS_SESSION_HEADER]
       end
 
       def auth_data(date, http_method, script_name)

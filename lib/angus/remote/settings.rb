@@ -19,12 +19,8 @@ module Angus
       end
 
       DEFAULT_TIMEOUT = 60
-      DEFAULT_PUBLIC_KEY = '1234567'
-      DEFAULT_PRIVATE_KEY = 'CHANGE ME!!'
 
       add_option(:default_timeout, DEFAULT_TIMEOUT)
-      add_option(:public_key, DEFAULT_PUBLIC_KEY)
-      add_option(:private_key, DEFAULT_PRIVATE_KEY)
       add_option(:redis, {})
 
     end

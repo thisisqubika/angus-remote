@@ -19,7 +19,6 @@ module Angus
 
       # Builds and returns a Client object for the service and version received
       def self.lookup(code_name, version = nil)
-
         version ||= service_version(code_name)
 
         @clients_cache ||= {}
@@ -30,7 +29,8 @@ module Angus
         begin
           service_definition = self.service_definition(code_name, version)
           client = Angus::Remote::Builder.build(code_name, service_definition,
-                                                  self.api_url(code_name, version))
+                                                self.api_url(code_name, version),
+                                                service_settings(code_name, version))
           @clients_cache[[code_name, version]] = client
 
         rescue Errno::ECONNREFUSED
@@ -100,20 +100,6 @@ module Angus
         end
       end
 
-      # Returns the connection configuration for a given service.
-      #
-      # @param [String] code_name Service name
-      #
-      # @return [Hash]
-      #
-      # @raise [ServiceConfigurationNotFound] When no configuration for the given service
-      def self.service_configuration(code_name)
-        @services_configuration ||= YAML.load_file(SERVICES_CONFIGURATION_FILE)
-
-        @services_configuration[code_name] or
-          raise ServiceConfigurationNotFound.new(code_name)
-      end
-
       # Returns the service's definition for the given service name and version
       #
       # @param [String] code_name Service that acts as a proxy.
@@ -155,7 +141,7 @@ module Angus
 
         proxy_doc_url = self.proxy_doc_url(code_name, version, remote_code_name)
 
-        definition_hash = fetch_remote_service_definition(proxy_doc_url)
+        definition_hash = fetch_remote_service_definition(proxy_doc_url, code_name, version)
 
         proxy_service_definition = Angus::SDoc::DefinitionsReader.build_service_definition(definition_hash)
 
@@ -179,7 +165,7 @@ module Angus
         if doc_url.match('file://(.*)') || doc_url.match('file:///(.*)')
           Angus::SDoc::DefinitionsReader.service_definition($1)
         else
-          definition_hash = fetch_remote_service_definition(doc_url)
+          definition_hash = fetch_remote_service_definition(doc_url, code_name, version)
           Angus::SDoc::DefinitionsReader.build_service_definition(definition_hash)
         end
       end
@@ -187,10 +173,11 @@ module Angus
       # Fetches a service definition from a remote http uri.
       #
       # @param [String] uri URI that publishes a service definition.
-      #   That uri should handle JSON format.
+      # @param [String] code_name Name of the service.
+      # @param [String] version Version of the service.
       #
       # @return [Hash] Service definition hash
-      def self.fetch_remote_service_definition(uri)
+      def self.fetch_remote_service_definition(uri, code_name, version)
         uri = URI(uri)
         uri.query = URI.encode_www_form({:format => :json})
 
@@ -204,12 +191,12 @@ module Angus
         response = connection.start do |http|
           request = Net::HTTP::Get.new(uri.request_uri)
 
-          authentication_provider.prepare_request(request, 'GET', uri.path)
+          authentication_provider(code_name, version).prepare_request(request, 'GET', uri.path)
 
           http.request(request)
         end
 
-        authentication_provider.store_session_private_key(response)
+        authentication_provider(code_name, version).store_session_private_key(response)
 
         JSON(response.body)
       rescue Exception
@@ -217,14 +204,54 @@ module Angus
       end
       private_class_method :fetch_remote_service_definition
 
-      def self.authentication_provider
-        settings = { :public_key => Settings.public_key,
-                     :private_key => Settings.private_key,
-                     :store => Settings.redis }
+      def self.authentication_provider(code_name, version)
+        @authentication_providers ||= {}
 
-        @authentication_provider ||= Angus::Authentication::Provider.new(settings)
+        unless @authentication_providers.include?([code_name, version])
+          service_settings = service_settings(code_name, version)
+
+          settings = { :public_key => service_settings['public_key'],
+                       :private_key => service_settings['private_key'],
+                       :store => Settings.redis }
+
+          @authentication_providers[[code_name, version]] = Authentication::Provider.new(settings)
+        end
+
+        @authentication_providers[[code_name, version]]
       end
       private_class_method :authentication_provider
+
+      # Returns the documentation url from the configuration file
+      #
+      # @param [String] code_name Name of the service.
+      # @param [String] version Version of the service.
+      #
+      # If no version given, it reads the version from the configuration file.
+      #
+      # @raise (see .service_version)
+      def self.service_settings(code_name, version = nil)
+        version ||= service_version(code_name)
+
+        config = service_configuration(code_name)
+
+        config["v#{version}"]
+      end
+      private_class_method :service_settings
+
+      # Returns the connection configuration for a given service.
+      #
+      # @param [String] code_name Service name
+      #
+      # @return [Hash]
+      #
+      # @raise [ServiceConfigurationNotFound] When no configuration for the given service
+      def self.service_configuration(code_name)
+        @services_configuration ||= YAML.load_file(SERVICES_CONFIGURATION_FILE)
+
+        @services_configuration[code_name] or
+          raise ServiceConfigurationNotFound.new(code_name)
+      end
+      private_class_method :service_configuration
 
     end
 

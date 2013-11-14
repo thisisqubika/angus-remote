@@ -15,10 +15,11 @@ module Angus
       # @param [String] code_name The service's name known to the service directory
       # @param [Angus::SDoc::Definitions::Service] service_definition
       # @param api_url Base service api url
+      # @param [Hash] options
       #
       # @return [Remote::Client] object that implements each method specified as operation
       #   in the service metadata
-      def self.build(code_name, service_definition, api_url)
+      def self.build(code_name, service_definition, api_url, options)
         remote_service_class = build_client_class(service_definition.name)
 
         # TODO: define how to use the namespace in the remote client.
@@ -43,7 +44,7 @@ module Angus
           end
         end
 
-        remote_service_class.new(api_url, self.default_timeout)
+        remote_service_class.new(api_url, self.default_timeout, options)
       end
 
       def self.define_operation(client_class, namespace, operation, service_code_name,

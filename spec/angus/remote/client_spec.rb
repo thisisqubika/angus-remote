@@ -21,7 +21,7 @@ describe Angus::Remote::Client do
     let(:authentication_provider) { double(:authentication_provider) }
 
     before do
-      client.stub(:authentication_provider => authentication_provider)
+      Angus::Authentication::Provider.stub(:new => authentication_provider)
       authentication_provider.stub(:prepare_request => nil, :store_session_private_key => nil)
       PersistentHTTP.any_instance.stub(:request => success_response)
     end

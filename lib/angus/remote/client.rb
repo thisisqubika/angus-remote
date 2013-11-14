@@ -12,7 +12,7 @@ module Angus
 
     # A client for service invocation
     class Client
-      def initialize(api_url, timeout = nil)
+      def initialize(api_url, timeout = nil, options = {})
         api_url = api_url[0..-2] if api_url[-1] == '/'
 
         @connection = PersistentHTTP.new(
@@ -27,6 +27,12 @@ module Angus
         )
 
         @api_base_path = @connection.default_path
+
+        provider_settings = { :public_key => options['public_key'],
+                              :private_key => options['private_key'],
+                              :store => Settings.redis }
+
+        @authentication_provider = Authentication::Provider.new(provider_settings)
       end
 
       # Makes a request to the service
@@ -52,11 +58,11 @@ module Angus
         request = Utils.build_request(method, path, request_params, encode_as_json)
 
         begin
-          authentication_provider.prepare_request(request, method.upcase, path)
+          @authentication_provider.prepare_request(request, method.upcase, path)
 
           response = @connection.request(request)
 
-          authentication_provider.store_session_private_key(response)
+          @authentication_provider.store_session_private_key(response)
 
           if Utils.severe_error_response?(response)
             raise RemoteSevereError.new(get_error_messages(response.body))
@@ -77,15 +83,6 @@ module Angus
       def get_error_messages(response_body)
         json_response = JSON(response_body) rescue { 'messages' => [] }
         Response::Builder::build_messages(json_response['messages'])
-      end
-
-
-      def authentication_provider
-        settings = { :public_key => Settings.public_key,
-                     :private_key => Settings.private_key,
-                     :store => Settings.redis }
-
-        @authentication_provider ||= Angus::Authentication::Provider.new(settings)
       end
 
     end
