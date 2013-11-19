@@ -33,6 +33,8 @@ module Angus
 
       def store_session_private_key(response)
         session_key_seed = extract_session_key_seed(response)
+        return unless session_key_seed
+
         session_key = generate_session_private(session_key_seed)
 
         @store.store_session_key(@public_key, session_key)
