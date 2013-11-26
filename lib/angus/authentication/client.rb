@@ -1,10 +1,10 @@
 require 'digest'
 
-require 'angus/authentication/redis_store'
+require_relative 'redis_client'
 
 module Angus
   module Authentication
-    class Provider
+    class Client
 
       DEFAULT_PUBLIC_KEY = '1234567'
       DEFAULT_PRIVATE_KEY = 'CHANGE ME!!'
@@ -17,7 +17,7 @@ module Angus
       def initialize(settings)
         @public_key = settings[:public_key] || DEFAULT_PUBLIC_KEY
         @private_key = settings[:private_key] || DEFAULT_PRIVATE_KEY
-        @store = RedisStore.new(settings[:store] || {})
+        @store = RedisClient.new(settings[:store] || {})
       end
 
       def prepare_request(request, http_method, script_name)

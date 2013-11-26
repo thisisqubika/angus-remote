@@ -18,27 +18,27 @@ describe Angus::Remote::Client do
   describe '#make_request' do
 
     let(:success_response) { double(:response, :code => 200, :body => '[]') }
-    let(:authentication_provider) { double(:authentication_provider) }
+    let(:authentication_client) { double(:authentication_client) }
 
     before do
-      Angus::Authentication::Provider.stub(:new => authentication_provider)
-      authentication_provider.stub(:prepare_request => nil, :store_session_private_key => nil)
+      Angus::Authentication::Client.stub(:new => authentication_client)
+      authentication_client.stub(:prepare_request => nil, :store_session_private_key => nil)
       PersistentHTTP.any_instance.stub(:request => success_response)
     end
 
     it 'prepares the request with authentication' do
       client.make_request('/users', 'get', false, [], {})
 
-      authentication_provider.should have_received(:prepare_request).with(kind_of(Net::HTTP::Get),
-                                                                          'GET', '//users')
+      authentication_client.should have_received(:prepare_request).with(kind_of(Net::HTTP::Get),
+                                                                        'GET', '//users')
     end
 
     it 'extracts the authentication data from the response' do
       client.make_request('/users', 'get', false, [], {})
 
-      authentication_provider.should have_received(
-                                       :store_session_private_key
-                                     ).with(success_response)
+      authentication_client.should have_received(
+                                     :store_session_private_key
+                                   ).with(success_response)
     end
 
 

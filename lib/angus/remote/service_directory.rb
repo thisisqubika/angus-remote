@@ -3,7 +3,7 @@ require 'json'
 require 'yaml'
 
 require 'angus/sdoc'
-require 'angus/authentication/provider'
+require 'angus/authentication/client'
 
 require_relative 'builder'
 require_relative 'exceptions'
@@ -191,12 +191,12 @@ module Angus
         response = connection.start do |http|
           request = Net::HTTP::Get.new(uri.request_uri)
 
-          authentication_provider(code_name, version).prepare_request(request, 'GET', uri.path)
+          authentication_client(code_name, version).prepare_request(request, 'GET', uri.path)
 
           http.request(request)
         end
 
-        authentication_provider(code_name, version).store_session_private_key(response)
+        authentication_client(code_name, version).store_session_private_key(response)
 
         JSON(response.body)
       rescue Exception
@@ -204,22 +204,22 @@ module Angus
       end
       private_class_method :fetch_remote_service_definition
 
-      def self.authentication_provider(code_name, version)
-        @authentication_providers ||= {}
+      def self.authentication_client(code_name, version)
+        @authentication_clients ||= {}
 
-        unless @authentication_providers.include?([code_name, version])
+        unless @authentication_clients.include?([code_name, version])
           service_settings = service_settings(code_name, version)
 
           settings = { :public_key => service_settings['public_key'],
                        :private_key => service_settings['private_key'],
-                       :store => Settings.redis }
+                       :store => Settings.redis.merge({ :namespace => "#{code_name}.#{version}" }) }
 
-          @authentication_providers[[code_name, version]] = Authentication::Provider.new(settings)
+          @authentication_clients[[code_name, version]] = Angus::Authentication::Client.new(settings)
         end
 
-        @authentication_providers[[code_name, version]]
+        @authentication_clients[[code_name, version]]
       end
-      private_class_method :authentication_provider
+      private_class_method :authentication_client
 
       # Returns the documentation url from the configuration file
       #

@@ -10,8 +10,8 @@ describe Angus::Remote::Builder do
   describe '.build' do
 
     let(:code_name) { 'vpos' }
-    let(:operation) { double(:operation, :code_name=> 'get_users', :service_name => 'vpos', :path => '/users', :method => :get) }
-    let(:proxy_operation) { double(:proxy_operation, :code_name=> 'get_users_proxy', :service_name => 'vpos', :path => '/users', :method => :get) }
+    let(:operation) { double(:operation, :code_name=> 'get_users', :service_name => 'vpos', :path => '/users', :http_method => :get) }
+    let(:proxy_operation) { double(:proxy_operation, :code_name=> 'get_users_proxy', :service_name => 'vpos', :path => '/users', :http_method => :get) }
     let(:glossary) { double(:glossary, :terms_hash_with_long_names => {}) }
     let(:service_definition) { double(:vpos, :name => 'Vpos', :operations => { 'users' => [operation] },
                                       :proxy_operations => { 'users' => [proxy_operation] }, :version => '0.1', :glossary => glossary) }

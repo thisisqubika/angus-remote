@@ -11,6 +11,16 @@ module Angus
 
     end
 
+    class RemoteSevereError < Exception
+
+      attr_reader :messages
+
+      def initialize(messages)
+        @messages = messages
+      end
+
+    end
+
     class RemoteConnectionError < Exception
 
       def initialize(url)

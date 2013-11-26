@@ -64,8 +64,8 @@ module Angus
 
           request_params = Angus::Remote::Builder.escape_request_params(request_params)
 
-          response = make_request(operation.path, operation.method, encode_as_json, path_params,
-                                  request_params)
+          response = make_request(operation.path, operation.http_method, encode_as_json,
+                                  path_params, request_params)
 
           Angus::Remote::Response::Builder.build_from_remote_response(response,
                                                                         service_code_name,
@@ -98,8 +98,8 @@ module Angus
 
           request_params = Angus::Remote::Builder.escape_request_params(request_params)
 
-          response = make_request(operation.path, operation.method, encode_as_json, path_params,
-                                  request_params)
+          response = make_request(operation.path, operation.http_method, encode_as_json,
+                                  path_params, request_params)
 
           Angus::Remote::Response::Builder.build_from_remote_response(response,
                                                                         service_code_name,

@@ -28,11 +28,11 @@ module Angus
 
         @api_base_path = @connection.default_path
 
-        provider_settings = { :public_key => options['public_key'],
-                              :private_key => options['private_key'],
-                              :store => Settings.redis }
+        client_settings = { :public_key => options['public_key'],
+                            :private_key => options['private_key'],
+                            :store => Settings.redis }
 
-        @authentication_provider = Authentication::Provider.new(provider_settings)
+        @authentication_client = Authentication::Client.new(client_settings)
       end
 
       # Makes a request to the service
@@ -58,11 +58,11 @@ module Angus
         request = Utils.build_request(method, path, request_params, encode_as_json)
 
         begin
-          @authentication_provider.prepare_request(request, method.upcase, path)
+          @authentication_client.prepare_request(request, method.upcase, path)
 
           response = @connection.request(request)
 
-          @authentication_provider.store_session_private_key(response)
+          @authentication_client.store_session_private_key(response)
 
           if Utils.severe_error_response?(response)
             raise RemoteSevereError.new(get_error_messages(response.body))
