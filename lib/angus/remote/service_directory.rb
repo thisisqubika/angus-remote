@@ -234,7 +234,13 @@ module Angus
 
         config = service_configuration(code_name)
 
-        config["v#{version}"]
+        service_settings = config["v#{version}"] or
+          raise ServiceConfigurationNotFound.new(code_name, version)
+
+        service_settings['code_name'] = code_name
+        service_settings['version'] = version
+
+        service_settings
       end
       private_class_method :service_settings
 

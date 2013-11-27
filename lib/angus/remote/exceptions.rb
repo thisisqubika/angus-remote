@@ -56,5 +56,22 @@ module Angus
       end
     end
 
+    class ServiceConfigurationNotFound < Exception
+
+      def initialize(code_name, version = nil)
+        @code_name = code_name
+        @version = version
+      end
+
+      def message
+        if @version
+          "Config for #@code_name v#@version not found."
+        else
+          "Config for #@code_name not found."
+        end
+      end
+
+    end
+
   end
 end

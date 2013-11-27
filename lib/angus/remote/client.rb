@@ -28,9 +28,10 @@ module Angus
 
         @api_base_path = @connection.default_path
 
+        store_namespace = "#{options['code_name']}.#{options['version']}"
         client_settings = { :public_key => options['public_key'],
                             :private_key => options['private_key'],
-                            :store => Settings.redis }
+                            :store => Settings.redis.merge({ :namespace =>  store_namespace }) }
 
         @authentication_client = Authentication::Client.new(client_settings)
       end
