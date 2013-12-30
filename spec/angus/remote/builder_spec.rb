@@ -3,6 +3,8 @@ require 'spec_helper'
 require 'angus/remote/client'
 require 'angus/remote/builder'
 
+require 'picasso-remote'
+
 describe Angus::Remote::Builder do
 
   subject(:builder) { Angus::Remote::Builder }
@@ -14,7 +16,7 @@ describe Angus::Remote::Builder do
     let(:proxy_operation) { double(:proxy_operation, :code_name=> 'get_users_proxy', :service_name => 'vpos', :path => '/users', :http_method => :get) }
     let(:glossary) { double(:glossary, :terms_hash_with_long_names => {}) }
     let(:service_definition) { double(:vpos, :name => 'Vpos', :operations => { 'users' => [operation] },
-                                      :proxy_operations => { 'users' => [proxy_operation] }, :version => '0.1', :glossary => glossary) }
+                                      :proxy_operations => [proxy_operation], :version => '0.1', :glossary => glossary) }
 
     let(:api_url) { 'http://localhost:8085/vpos/api/0.1/' }
 
@@ -62,8 +64,9 @@ describe Angus::Remote::Builder do
         describe 'the generated proxy operation' do
 
           before do
-            Angus::Remote::ServiceDirectory.stub(:service_configuration => { 'v0.1' => { 'doc_url' => 'some_url/doc', 'api_url' => 'some_url/api' } })
-            Angus::Remote::ServiceDirectory.stub(:fetch_remote_service_definition => { 'service' => { 'service' => 'vpos'  }, 'code_name' => 'vpos', 'version' => '0.1', 'operations' => { 'users' => { 'get_users_proxy' => { 'name' => 'Obtener usuarios' } } } })
+            Picasso::Remote::ServiceDirectory.stub(:service_configuration => { 'v0.1' => { 'doc_url' => 'some_url/doc', 'api_url' => 'some_url/api' } })
+            Picasso::Remote::ServiceDirectory.stub(:fetch_remote_service_definition => { 'service' => { 'service' => 'vpos'  }, 'code_name' => 'vpos', 'version' => '0.1', 'operations' => { 'users' => { 'get_users_proxy' => { 'name' => 'Obtener usuarios' } } } })
+            Picasso::Remote::Response::Builder.stub(:build_from_remote_response)
           end
 
           it 'makes a request to the remote service' do

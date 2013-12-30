@@ -37,11 +37,9 @@ module Angus
           end
         end
 
-        service_definition.proxy_operations.each do |namespace, operations|
-          operations.each do |operation|
-            self.define_proxy_operation(remote_service_class, namespace, operation, code_name,
-                                        service_definition)
-          end
+        service_definition.proxy_operations.each do |operation|
+          self.define_proxy_operation(remote_service_class, operation.service_name, operation,
+                                      code_name, service_definition)
         end
 
         remote_service_class.new(api_url, self.default_timeout, options)
@@ -81,7 +79,9 @@ module Angus
                                                                   path_params = nil,
                                                                   request_params = nil|
 
-          service_definition = Angus::Remote::ServiceDirectory.join_proxy(
+          require 'picasso-remote'
+
+          service_definition = Picasso::Remote::ServiceDirectory.join_proxy(
             service_code_name,
             service_definition.version,
             operation.service_name
@@ -89,22 +89,21 @@ module Angus
 
           args = [encode_as_json, path_params, request_params]
 
-          request_params = Angus::Remote::Builder.extract_var_arg!(args, Hash) || {}
-          path_params = Angus::Remote::Builder.extract_var_arg!(args, Array) || []
-          encode_as_json = Angus::Remote::Builder.extract_var_arg!(args, TrueClass) || false
+          request_params = Picasso::Remote::Builder.extract_var_arg!(args, Hash) || {}
+          path_params = Picasso::Remote::Builder.extract_var_arg!(args, Array) || []
+          encode_as_json = Picasso::Remote::Builder.extract_var_arg!(args, TrueClass) || false
 
-          request_params = Angus::Remote::Builder.apply_glossary(service_definition.glossary,
+          request_params = Picasso::Remote::Builder.apply_glossary(service_definition.glossary,
                                                                    request_params)
 
-          request_params = Angus::Remote::Builder.escape_request_params(request_params)
+          request_params = Picasso::Remote::Builder.escape_request_params(request_params)
 
           response = make_request(operation.path, operation.http_method, encode_as_json,
                                   path_params, request_params)
 
-          Angus::Remote::Response::Builder.build_from_remote_response(response,
+          Picasso::Remote::Response::Builder.build_from_remote_response(response,
                                                                         service_code_name,
                                                                         service_definition.version,
-                                                                        namespace,
                                                                         operation.code_name)
         end
       end
