@@ -2,13 +2,12 @@ require 'uri'
 
 require_relative 'client'
 require_relative 'response/builder'
+require_relative 'settings'
 
 module Angus
   module Remote
 
     module Builder
-
-      DEFAULT_TIMEOUT = 60
 
       # Builds a client for a specific service.
       #
@@ -42,7 +41,7 @@ module Angus
                                       code_name, service_definition)
         end
 
-        remote_service_class.new(api_url, self.default_timeout, options)
+        remote_service_class.new(api_url, Settings.default_timeout, options)
       end
 
       def self.define_operation(client_class, namespace, operation, service_code_name,
@@ -190,14 +189,6 @@ module Angus
         end
 
         encoded
-      end
-
-      def self.default_timeout
-        @default_timeout || DEFAULT_TIMEOUT
-      end
-
-      def self.default_timeout=(default_timeout)
-        @default_timeout = default_timeout
       end
 
     end

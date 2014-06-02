@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.test_files    = Dir.glob('{spec/angus}/**/*')
   spec.require_paths = %W[lib]
 
-  spec.add_dependency('angus-sdoc', '~> 0.0', '>= 0.0.4')
+  spec.add_dependency('angus-sdoc', '~> 0.0', '>= 0.0.6')
   spec.add_dependency('persistent_http', '~> 1.0')
   spec.add_dependency('multipart-post', '~> 1.2')
   spec.add_dependency('redis')

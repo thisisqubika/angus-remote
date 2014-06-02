@@ -19,9 +19,11 @@ module Angus
       end
 
       DEFAULT_TIMEOUT = 60
+      DEFAULT_CONFIGURATION_FILE = 'config/services.yml'
 
       add_option(:default_timeout, DEFAULT_TIMEOUT)
       add_option(:redis, {})
+      add_option(:configuration_file, DEFAULT_CONFIGURATION_FILE)
 
     end
 

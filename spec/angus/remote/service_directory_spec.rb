@@ -8,8 +8,8 @@ describe Angus::Remote::ServiceDirectory do
 
   let(:code_name) { 'vpos' }
   let(:version) { '0.1' }
-  let(:doc_url) { 'some_url/doc' }
-  let(:api_url) { 'some_url/api' }
+  let(:doc_url) { 'http://example.com/some_url/doc' }
+  let(:api_url) { 'http://example.com/some_url/api' }
 
   before do
     Angus::Remote::ServiceDirectory.stub(:service_configuration => { "v#{version}" => {
@@ -17,9 +17,33 @@ describe Angus::Remote::ServiceDirectory do
     })
   end
 
+  describe '.lookup' do
+
+    context 'when a definition hash is given' do
+      before do
+        service_directory.stub(:fetch_remote_service_definition => {})
+        service_definition = Angus::SDoc::Definitions::Service.new
+        Angus::SDoc::DefinitionsReader.stub(:build_service_definition => service_definition)
+      end
+
+      it 'returns the service definition' do
+        service_directory.lookup(
+          { :code_name => code_name, :version => version, :doc_url => version, :api_url => version}
+        ).should be_kind_of(Angus::Remote::Client)
+      end
+    end
+
+    context 'when the code name and version are given' do
+      it 'returns the service definition' do
+        service_directory.lookup(code_name, version).should be_kind_of(Angus::Remote::Client)
+      end
+    end
+
+  end
+
   describe '.get_service_definition' do
 
-    let(:service_definition){ double(:service_definition)}
+    let(:service_definition) { Angus::SDoc::Definitions::Service.new }
 
     context 'when a file url' do
       let(:doc_url) { 'file://path/to/doc' }

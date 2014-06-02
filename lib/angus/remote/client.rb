@@ -22,8 +22,10 @@ module Angus
           :force_retry  => false,
           :url          => api_url,
 
+          :keep_alive   => timeout,
           :read_timeout => timeout,
-          :open_timeout => timeout
+          :open_timeout => timeout,
+          :idle_timeout => timeout
         )
 
         @api_base_path = @connection.default_path

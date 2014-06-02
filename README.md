@@ -34,8 +34,10 @@ service documentation and api paths, there are 2 ways of doing so:
 The easiest way is to provide both paths when doing a service lookup:
 
 ```ruby
-remote_service = Angus::Remote::ServiceDirectory.lookup({ api_url: 'http://localhost:9292/demo/api/0.1/',
-                                                          doc_url: 'http://localhost:9292/demo/doc/0.1/' })
+remote_service = Angus::Remote::ServiceDirectory.lookup({ code_name: 'demo'                               # Required
+                                                          version: '0.2',                                 # Defaults to 0.1
+                                                          api_url: 'http://localhost:9292/demo/api/0.2/', # Required
+                                                          doc_url: 'http://localhost:9292/demo/doc/0.2/'  # Required })
 ```
 
 ### Second method
@@ -80,7 +82,7 @@ the url (GET) or sent as form data in the request body (POST, PUT).
 You can also send the parameters as a json in the request body, like this:
 
 ```ruby
-remote_service.create_user(true, { name: 'John', last_name: 'Doe })
+remote_service.create_user(true, { name: 'John', last_name: 'Doe' })
 ```
 
 ## Using angus-authentication

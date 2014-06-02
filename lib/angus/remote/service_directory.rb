@@ -13,12 +13,17 @@ module Angus
 
     module ServiceDirectory
 
-      # Path to the configuration file that has the information about the
-      # doc_url and api_url
-      SERVICES_CONFIGURATION_FILE = 'config/services.yml'
-
       # Builds and returns a Client object for the service and version received
-      def self.lookup(code_name, version = nil)
+      def self.lookup(*args)
+        if args.length == 1
+          definition = args.first
+          code_name = definition.delete(:code_name)
+          version = definition.delete(:version)
+          set_service_configuration(code_name, version, definition)
+        else
+          code_name, version = args
+        end
+
         version ||= service_version(code_name)
 
         @clients_cache ||= {}
@@ -252,14 +257,34 @@ module Angus
       #
       # @raise [ServiceConfigurationNotFound] When no configuration for the given service
       def self.service_configuration(code_name)
-        @services_configuration ||= YAML.load_file(SERVICES_CONFIGURATION_FILE)
+        @services_configuration ||= load_services_configuration_file
 
         @services_configuration[code_name] or
           raise ServiceConfigurationNotFound.new(code_name)
       end
       private_class_method :service_configuration
 
-    end
+      def self.set_service_configuration(code_name, version, configuration)
+        @services_configuration ||= load_services_configuration_file
+        @services_configuration[code_name] ||= {}
 
+        @services_configuration[code_name]["v#{version}"] = configuration.inject({}) do |config, entry|
+          k, v = entry
+          config.merge!({ k.to_s => v })
+        end
+      end
+      private_class_method :set_service_configuration
+
+      def self.load_services_configuration_file
+        return {} unless File.exists?(Settings.configuration_file)
+        configuration = YAML.load_file(Settings.configuration_file)
+
+        configuration = {} unless configuration.is_a?(Hash)
+
+        configuration
+      end
+      private_class_method :load_services_configuration_file
+
+    end
   end
 end
