@@ -4,6 +4,7 @@ require 'simplecov'
 SimpleCov.start
 
 require 'rspec'
+require 'rspec/its'
 
 require 'simplecov-rcov'
 require 'simplecov-rcov-text'

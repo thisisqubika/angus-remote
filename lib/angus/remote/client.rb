@@ -22,10 +22,8 @@ module Angus
           :force_retry  => false,
           :url          => api_url,
 
-          :keep_alive   => timeout,
           :read_timeout => timeout,
-          :open_timeout => timeout,
-          :idle_timeout => timeout
+          :open_timeout => timeout
         )
 
         @api_base_path = @connection.default_path
@@ -72,8 +70,8 @@ module Angus
           end
 
           response
-        rescue Errno::ECONNREFUSED, PersistentHTTP::Error
-          raise RemoteConnectionError.new(@api_base_path)
+        rescue Errno::ECONNREFUSED, PersistentHTTP::Error => e
+          raise RemoteConnectionError.new("#@api_base_path - #{e.class}: #{e.message}")
         end
       end
 

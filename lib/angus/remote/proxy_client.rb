@@ -10,9 +10,7 @@ module Angus
     # A client for service invocation when proxing requests.
     class ProxyClient
 
-      DEFAULT_TIMEOUT = 10
-
-      def initialize(url, timeout = DEFAULT_TIMEOUT)
+      def initialize(url, timeout)
         url = url[0..-2] if url[-1] == '/'
 
         @connection = PersistentHTTP.new(
@@ -44,8 +42,8 @@ module Angus
           )
 
           [response.code.to_i, from_headers, [response.body]]
-        rescue Errno::ECONNREFUSED
-          raise RemoteConnectionError.new(self.class.base_uri)
+        rescue Errno::ECONNREFUSED => e
+          raise RemoteConnectionError.new("#{self.class.base_uri} - #{e.class}: #{e.message}")
         end
       end
 

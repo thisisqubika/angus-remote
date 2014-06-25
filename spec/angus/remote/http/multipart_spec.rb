@@ -24,23 +24,23 @@ describe Http::Multipart do
   describe '.hash_contains_files?' do
 
     it 'should return true if one of the values in the passed hash is a file' do
-      Http::Multipart.hash_contains_files?({:a => 1, :file => file}).should be_true
+      Http::Multipart.hash_contains_files?({:a => 1, :file => file}).should be_truthy
     end
 
     it 'should return true if one of the values in the passed hash is an upload io' do
-      Http::Multipart.hash_contains_files?({:a => 1, :file => some_upload_io}).should be_true
+      Http::Multipart.hash_contains_files?({:a => 1, :file => some_upload_io}).should be_truthy
     end
 
     it 'should return true if one of the values in the passed hash is a tempfile' do
-      Http::Multipart.hash_contains_files?({:a => 1, :file => tempfile}).should be_true
+      Http::Multipart.hash_contains_files?({:a => 1, :file => tempfile}).should be_truthy
     end
 
     it 'should return false if none of the values in the passed hash is a file' do
-      Http::Multipart.hash_contains_files?({:a => 1, :b => 'nope'}).should be_false
+      Http::Multipart.hash_contains_files?({:a => 1, :b => 'nope'}).should be_falsey
     end
 
     it 'should return true if passed hash includes an a array of files' do
-      Http::Multipart.hash_contains_files?({:files => [file, file]}).should be_true
+      Http::Multipart.hash_contains_files?({:files => [file, file]}).should be_truthy
     end
 
   end

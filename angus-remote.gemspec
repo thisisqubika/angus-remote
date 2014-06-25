@@ -27,6 +27,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency('rake')
   spec.add_development_dependency('fakefs', '~> 0.4')
   spec.add_development_dependency('rspec', '~> 2.14')
+  spec.add_development_dependency('rspec-its')
   spec.add_development_dependency('mock_redis')
   spec.add_development_dependency('simplecov', '~> 0.7')
   spec.add_development_dependency('simplecov-rcov', '~> 0.2')

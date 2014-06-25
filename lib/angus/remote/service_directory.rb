@@ -38,8 +38,8 @@ module Angus
                                                 service_settings(code_name, version))
           @clients_cache[[code_name, version]] = client
 
-        rescue Errno::ECONNREFUSED
-          raise RemoteConnectionError.new(self.api_url(code_name, version))
+        rescue Errno::ECONNREFUSED => e
+          raise RemoteConnectionError.new("#{self.api_url(code_name, version)} - #{e.class}: #{e.message}")
         end
       end
 
@@ -204,8 +204,8 @@ module Angus
         authentication_client(code_name, version).store_session_private_key(response)
 
         JSON(response.body)
-      rescue Exception
-        raise RemoteConnectionError.new(uri)
+      rescue Exception => e
+        raise RemoteConnectionError.new("#{uri} - #{e.class}: #{e.message}")
       end
       private_class_method :fetch_remote_service_definition
 
