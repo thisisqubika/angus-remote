@@ -42,6 +42,12 @@ module Angus
             service_code_name, version
           )
 
+          self.build_from_definition(status_code, body, service_definition, operation_namespace,
+                                     operation_code_name)
+        end
+
+        def self.build_from_definition(status_code, body, service_definition, operation_namespace,
+                                       operation_code_name)
           representations = service_definition.representations
           glossary = service_definition.glossary
 
@@ -57,8 +63,8 @@ module Angus
           # TODO use constants
           response[:status_code] = status_code
           response[:body] = body
-          response[:service_code_name] = service_code_name
-          response[:service_version] = version
+          response[:service_code_name] = service_definition.code_name
+          response[:service_version] = service_definition.version
           response[:operation_namespace] = operation_namespace
           response[:operation_code_name] = operation_code_name
 
