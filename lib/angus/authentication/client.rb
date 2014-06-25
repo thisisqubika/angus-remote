@@ -6,21 +6,28 @@ module Angus
   module Authentication
     class Client
 
-      DEFAULT_PUBLIC_KEY = '1234567'
-      DEFAULT_PRIVATE_KEY = 'CHANGE ME!!'
-
       AUTHENTICATION_HEADER = 'AUTHORIZATION'
       BAAS_AUTHENTICATION_HEADER = 'X-BAAS-AUTH'
       BAAS_SESSION_HEADER = 'X-Baas-Session-Seed'
       DATE_HEADER = 'DATE'
 
       def initialize(settings)
-        @public_key = settings[:public_key] || DEFAULT_PUBLIC_KEY
-        @private_key = settings[:private_key] || DEFAULT_PRIVATE_KEY
+        unless settings[:public_key] && settings[:private_key]
+          warn "No authentication info provided, angus-authentication has been disabled for: #{settings[:service_id]}"
+          @enabled = false
+          return
+        end
+
+        @enabled = true
+        @public_key = settings[:public_key]
+        @private_key = settings[:private_key]
+
         @store = RedisClient.new(settings[:store] || {})
       end
 
       def prepare_request(request, http_method, script_name)
+        return unless @enabled
+
         date = Date.today
 
         auth_token = generate_auth_token(date, http_method, script_name)
@@ -32,6 +39,8 @@ module Angus
       end
 
       def store_session_private_key(response)
+        return unless @enabled
+
         session_key_seed = extract_session_key_seed(response)
         return unless session_key_seed
 

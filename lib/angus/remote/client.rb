@@ -31,6 +31,7 @@ module Angus
         store_namespace = "#{options['code_name']}.#{options['version']}"
         client_settings = { :public_key => options['public_key'],
                             :private_key => options['private_key'],
+                            :service_id => store_namespace,
                             :store => Settings.redis.merge({ :namespace =>  store_namespace }) }
 
         @authentication_client = Authentication::Client.new(client_settings)
