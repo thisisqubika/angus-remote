@@ -25,29 +25,29 @@ module Angus
         # specified in the operation response metadata
         #
         # @param [Integer] status_code HTTP status_code
-        # @param body [String] HTTP body
-        # @param service_name [String] Name of the service that the response belongs to
-        # @param version [String] Version of the service that the response belongs to
-        # @param operation_namespace [String] Namespace of the operation that the response belongs to
-        # @param operation_name [String] Name of the operation that the response belongs to
+        # @param [String] body HTTP body
+        # @param [String] service_code_name Name of the service that the response belongs to
+        # @param [String] service_version Version of the service that the response belongs to
+        # @param [String] operation_namespace Namespace of the operation that the response belongs to
+        # @param [String] operation_name Name of the operation that the response belongs to
         #
         # @return A Response object that responds to the methods:
         #   - status
         #   - messages
         #
         #   Also, provides one method for each value / object / array returned
-        def self.build(status_code, body, service_code_name, version, operation_namespace,
+        def self.build(status_code, body, service_code_name, service_version, operation_namespace,
                        operation_code_name)
           service_definition = Angus::Remote::ServiceDirectory.service_definition(
-            service_code_name, version
+            service_code_name, service_version
           )
 
-          self.build_from_definition(status_code, body, service_definition, operation_namespace,
-                                     operation_code_name)
+          self.build_from_definition(status_code, body, service_code_name, service_version,
+                                     service_definition, operation_namespace, operation_code_name)
         end
 
-        def self.build_from_definition(status_code, body, service_definition, operation_namespace,
-                                       operation_code_name)
+        def self.build_from_definition(status_code, body, service_code_name, service_version,
+                                       service_definition, operation_namespace, operation_code_name)
           representations = service_definition.representations
           glossary = service_definition.glossary
 
@@ -63,8 +63,8 @@ module Angus
           # TODO use constants
           response[:status_code] = status_code
           response[:body] = body
-          response[:service_code_name] = service_definition.code_name
-          response[:service_version] = service_definition.version
+          response[:service_code_name] = service_code_name
+          response[:service_version] = service_version
           response[:operation_namespace] = operation_namespace
           response[:operation_code_name] = operation_code_name
 
