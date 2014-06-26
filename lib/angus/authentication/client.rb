@@ -61,7 +61,11 @@ module Angus
       end
 
       def extract_session_key_seed(response)
-        response[BAAS_SESSION_HEADER]
+        if response.is_a?(Hash)
+          response.find { |k, v| k.upcase ==  BAAS_SESSION_HEADER.upcase }.last
+        else
+          response[BAAS_SESSION_HEADER]
+        end
       end
 
       def auth_data(date, http_method, script_name)

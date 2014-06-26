@@ -248,7 +248,6 @@ module Angus
 
         service_settings
       end
-      private_class_method :service_settings
 
       # Returns the connection configuration for a given service.
       #

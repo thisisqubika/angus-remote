@@ -10,7 +10,7 @@ module Angus
     # A client for service invocation when proxing requests.
     class ProxyClient
 
-      def initialize(url, timeout)
+      def initialize(url, timeout = 60)
         url = url[0..-2] if url[-1] == '/'
 
         @connection = PersistentHTTP.new(
