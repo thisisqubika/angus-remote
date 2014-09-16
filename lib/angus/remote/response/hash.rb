@@ -17,13 +17,15 @@ module Angus
 
           elements.each do |name, value|
             if value.is_a?(Angus::Remote::Response::Hash)
-              value.to_hash
+              hash[name] = value.to_hash
             elsif value.is_a?(Array)
               hash[name] = build_hash_from_array(value)
             else
               hash[name] = value
             end
           end
+
+          hash
         end
 
         private
