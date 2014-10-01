@@ -62,7 +62,7 @@ module Angus
 
       def extract_session_key_seed(response)
         if response.is_a?(Hash)
-          response.find { |k, v| k.upcase ==  BAAS_SESSION_HEADER.upcase }.last
+          (response.find { |k, v| k.upcase ==  BAAS_SESSION_HEADER.upcase } || []).last
         else
           response[BAAS_SESSION_HEADER]
         end

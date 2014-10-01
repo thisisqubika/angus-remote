@@ -13,12 +13,14 @@ module Angus
 
     module ServiceDirectory
 
+      DEFAULT_VERSION = '0.1'
+
       # Builds and returns a Client object for the service and version received
       def self.lookup(*args)
         if args.length == 1
           definition = args.first
           code_name = definition.delete(:code_name)
-          version = definition.delete(:version)
+          version = definition.delete(:version) || DEFAULT_VERSION
           set_service_configuration(code_name, version, definition)
         else
           code_name, version = args
