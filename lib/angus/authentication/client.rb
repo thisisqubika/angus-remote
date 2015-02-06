@@ -1,83 +1,56 @@
 require 'digest'
-
-require_relative 'redis_client'
+require 'time'
 
 module Angus
   module Authentication
     class Client
 
+      BAAS_VERSION = 1
+
       AUTHENTICATION_HEADER = 'AUTHORIZATION'
-      BAAS_AUTHENTICATION_HEADER = 'X-BAAS-AUTH'
-      BAAS_SESSION_HEADER = 'X-Baas-Session-Seed'
       DATE_HEADER = 'DATE'
 
-      def initialize(settings)
-        unless settings[:public_key] && settings[:private_key]
-          warn "No authentication info provided, angus-authentication has been disabled for: #{settings[:service_id]}"
-          @enabled = false
-          return
+      # @param [Hash] opts
+      # @option opts [String] :public_key
+      # @option opts [String] :private_key
+      # @option opts [String] :service_id
+      def initialize(opts)
+        @public_key = opts[:public_key]
+        @private_key = opts[:private_key]
+
+        if disabled?
+          warn(
+            "No authentication info provided, angus-authentication has been disabled for: " \
+            "#{opts[:service_id]}"
+          )
         end
-
-        @enabled = true
-        @public_key = settings[:public_key]
-        @private_key = settings[:private_key]
-
-        @store = RedisClient.new(settings[:store] || {})
       end
 
-      def prepare_request(request, http_method, script_name)
-        return unless @enabled
+      def prepare_request(request, http_method, operation_path)
+        return if disabled?
 
-        date = Date.today
+        now = Time.now
 
-        auth_token = generate_auth_token(date, http_method, script_name)
-        request[DATE_HEADER] = date.httpdate
-        request[AUTHENTICATION_HEADER] = generate_auth_header(auth_token)
+        request_signature = request_signature(@private_key, now, http_method, operation_path)
+        auth_header = auth_header(@public_key, request_signature)
 
-        session_auth_token = generate_session_auth_token(date, http_method, script_name)
-        request[BAAS_AUTHENTICATION_HEADER] = generate_auth_header(session_auth_token)
-      end
-
-      def store_session_private_key(response)
-        return unless @enabled
-
-        session_key_seed = extract_session_key_seed(response)
-        return unless session_key_seed
-
-        session_key = generate_session_private(session_key_seed)
-
-        @store.store_session_key(@public_key, session_key)
+        request[DATE_HEADER] = now.httpdate
+        request[AUTHENTICATION_HEADER] = auth_header
       end
 
       private
-
-      def generate_session_auth_token(date, http_method, script_name)
-        session_private_key = @store.get_session_key(@public_key)
-        Digest::SHA1.hexdigest("#{session_private_key}\n#{auth_data(date, http_method, script_name)}")
+      def disabled?
+        !(@public_key || @private_key)
       end
 
-      def generate_auth_token(date, http_method, script_name)
-        Digest::SHA1.hexdigest("#@private_key\n#{auth_data(date, http_method, script_name)}")
+      def auth_header(public_key, request_signature)
+        "BAAS v#{BAAS_VERSION} apps/#{public_key}:#{request_signature}"
       end
 
-      def extract_session_key_seed(response)
-        if response.is_a?(Hash)
-          (response.find { |k, v| k.upcase ==  BAAS_SESSION_HEADER.upcase } || []).last
-        else
-          response[BAAS_SESSION_HEADER]
-        end
-      end
+      def request_signature(private_key, time, http_method, operation_path)
+        plain_signature = "#{private_key}\n#{time.httpdate}\n#{http_method}\n#{operation_path}"
 
-      def auth_data(date, http_method, script_name)
-        "#{date.httpdate}\n#{http_method}\n#{script_name}"
-      end
-
-      def generate_session_private(key_seed)
-        Digest::SHA1.hexdigest("#@private_key\n#{key_seed}")
-      end
-
-      def generate_auth_header(auth_token)
-        "#@public_key:#{auth_token}"
+        Digest::SHA1.hexdigest(plain_signature)
       end
 
     end

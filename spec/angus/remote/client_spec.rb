@@ -33,15 +33,6 @@ describe Angus::Remote::Client do
                                                                         'GET', '//users')
     end
 
-    it 'extracts the authentication data from the response' do
-      client.make_request('/users', 'get', false, [], {})
-
-      authentication_client.should have_received(
-                                     :store_session_private_key
-                                   ).with(success_response)
-    end
-
-
     it 'returns the remote service response' do
       client.make_request('/users', 'get', false, [], {}).should eq(success_response)
     end

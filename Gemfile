@@ -4,7 +4,6 @@ source 'https://rubygems.org'
 gemspec
 
 gem 'picasso-remote', :git => 'ssh://git@intranet.moove-it.com:8082/picasso-remote-client',
-                      :branch => :legacy
+                      :branch => 'legacy'
 
-gem 'picasso-sdoc', :git => 'ssh://git@intranet.moove-it.com:8082/picasso-sdoc',
-                    :branch => :legacy
+gem 'picasso-sdoc', :git => 'ssh://git@intranet.moove-it.com:8082/picasso-sdoc'

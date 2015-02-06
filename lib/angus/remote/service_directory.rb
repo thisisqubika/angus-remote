@@ -203,8 +203,6 @@ module Angus
           http.request(request)
         end
 
-        authentication_client(code_name, version).store_session_private_key(response)
-
         JSON(response.body)
       rescue Exception => e
         raise RemoteConnectionError.new("#{uri} - #{e.class}: #{e.message}")
@@ -219,8 +217,7 @@ module Angus
 
           settings = { :public_key => service_settings['public_key'],
                        :private_key => service_settings['private_key'],
-                       :service_id => "#{code_name}.#{version}",
-                       :store => Settings.redis.merge({ :namespace => "#{code_name}.#{version}" }) }
+                       :service_id => "#{code_name}.#{version}" }
 
           @authentication_clients[[code_name, version]] = Angus::Authentication::Client.new(settings)
         end
