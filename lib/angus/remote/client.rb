@@ -16,7 +16,7 @@ module Angus
         api_url = api_url[0..-2] if api_url[-1] == '/'
 
         @connection = PersistentHTTP.new(
-          :pool_size    => 10,
+          :pool_size    => options['pool_size'] || 10,
           :pool_timeout => 10,
           :warn_timeout => 0.25,
           :force_retry  => false,
