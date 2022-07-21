@@ -1,4 +1,4 @@
-require 'uri'
+require 'addressable/uri'
 
 require_relative 'client'
 require_relative 'response/builder'
@@ -181,7 +181,7 @@ module Angus
       def self.escape_request_params(request_params)
         encoded = {}
         request_params.each do |name, value|
-          encoded_name = URI.escape(name.to_s)
+          encoded_name = Addressable::URI.escape(name.to_s)
           if value.is_a? Hash
             value = self.escape_request_params(value)
           end

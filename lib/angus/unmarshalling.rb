@@ -21,7 +21,7 @@ module Angus
       when :date_time
         DateTime.iso8601(scalar)
       when :decimal
-        BigDecimal.new(scalar)
+        BigDecimal(scalar)
       when :object
         scalar
       else
