@@ -33,7 +33,7 @@ module Http
       elsif value.is_a?(Hash)
         stack << [key,value]
       else
-        param << "#{key}=#{URI.encode(value.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))}&"
+        param << "#{key}=#{CGI.escape(value.to_s)}&"
       end
 
       stack.each do |parent, hash|
