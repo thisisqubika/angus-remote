@@ -1,4 +1,4 @@
-require 'net/http/post/multipart'
+require 'multipart/post'
 
 module Http
   module MultipartMethods
@@ -27,7 +27,7 @@ module Http
         if @body_parts
           self.set_content_type('multipart/form-data', {'boundary' => boundary})
           self.content_length = @body_parts.inject(0) { |sum,i| sum + i.length }
-          self.body_stream = CompositeReadIO.new(*@body_parts.map { |part| part.to_io })
+          self.body_stream = ::Multipart::Post::CompositeReadIO.new(*@body_parts.map { |part| part.to_io })
         end
       end
     end
