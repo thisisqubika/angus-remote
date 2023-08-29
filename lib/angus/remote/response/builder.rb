@@ -217,6 +217,7 @@ module Angus
             return nil if representation.nil?
             representation.fields.each do |field|
               field_raw_value = hash_value[field.name]
+              next if field_raw_value.nil? && field.optional
               field_value = nil
               unless field_raw_value.nil? && field.required == false
                 if field.type && representations.include?(field.type)
@@ -267,6 +268,8 @@ module Angus
         def self.build_collection_from_representation(value_array, type, representations,
                                                       glossary_terms_hash)
           collection = []
+
+          return collection if value_array.nil?
 
           value_array.each do |raw_value|
             collection << build_from_representation(raw_value, type, representations,
