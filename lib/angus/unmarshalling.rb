@@ -1,16 +1,16 @@
+# frozen_string_literal: true
+
 require 'bigdecimal'
 require 'date'
 
-
 module Angus
   module Unmarshalling
-
     def self.unmarshal_scalar(scalar, type)
       return nil if scalar.nil?
 
       case type
       when :string
-        #scalar.force_encoding(Encoding::UTF_8)
+        # scalar.force_encoding(Encoding::UTF_8)
         scalar
       when :integer
         scalar
@@ -32,6 +32,5 @@ module Angus
         raise ArgumentError, "Unkonwn type: #{type}"
       end
     end
-
   end
 end

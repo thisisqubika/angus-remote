@@ -1,0 +1,41 @@
+Metrics/BlockLength:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Style/OptionalBooleanParameter:
+  Enabled: false
+
+Lint/RescueException:
+  Enabled: false
+
+Metrics/ModuleLength:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Metrics/ParameterLists:
+  Enabled: false
+
+Lint/InheritException:
+  Enabled: false
+
+Naming/FileName:
+  Enabled: false
+
+Style/EvalWithLocation:
+  Enabled: false
+
+Naming/HeredocDelimiterNaming:
+  Enabled: false

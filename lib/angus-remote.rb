@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'angus/remote/client'
 require 'angus/remote/builder'
 require 'angus/remote/proxy_client'

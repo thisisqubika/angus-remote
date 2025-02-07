@@ -1,9 +1,10 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 require 'angus/remote/service_directory'
 
 describe Angus::Remote::ServiceDirectory do
-
   subject(:service_directory) { Angus::Remote::ServiceDirectory }
 
   let(:code_name) { 'vpos' }
@@ -12,23 +13,22 @@ describe Angus::Remote::ServiceDirectory do
   let(:api_url) { 'http://example.com/some_url/api' }
 
   before do
-    Angus::Remote::ServiceDirectory.stub(:service_configuration => { "v#{version}" => {
-      'doc_url' => doc_url, 'api_url' => api_url }
-    })
+    Angus::Remote::ServiceDirectory.stub(service_configuration: { "v#{version}" => {
+                                           'doc_url' => doc_url, 'api_url' => api_url
+                                         } })
   end
 
   describe '.lookup' do
-
     context 'when a definition hash is given' do
       before do
-        service_directory.stub(:fetch_remote_service_definition => {})
+        service_directory.stub(fetch_remote_service_definition: {})
         service_definition = Angus::SDoc::Definitions::Service.new
-        Angus::SDoc::DefinitionsReader.stub(:build_service_definition => service_definition)
+        Angus::SDoc::DefinitionsReader.stub(build_service_definition: service_definition)
       end
 
       it 'returns the service definition' do
         service_directory.lookup(
-          { :code_name => code_name, :version => version, :doc_url => version, :api_url => version}
+          { code_name: code_name, version: version, doc_url: version, api_url: version }
         ).should be_kind_of(Angus::Remote::Client)
       end
     end
@@ -38,18 +38,16 @@ describe Angus::Remote::ServiceDirectory do
         service_directory.lookup(code_name, version).should be_kind_of(Angus::Remote::Client)
       end
     end
-
   end
 
   describe '.get_service_definition' do
-
     let(:service_definition) { Angus::SDoc::Definitions::Service.new }
 
     context 'when a file url' do
       let(:doc_url) { 'file://path/to/doc' }
 
       before do
-        Angus::SDoc::DefinitionsReader.stub(:service_definition => service_definition)
+        Angus::SDoc::DefinitionsReader.stub(service_definition: service_definition)
       end
 
       it 'builds the service definition from the path' do
@@ -70,8 +68,8 @@ describe Angus::Remote::ServiceDirectory do
       let(:definition_hash) { {} }
 
       before do
-        service_directory.stub(:fetch_remote_service_definition => definition_hash)
-        Angus::SDoc::DefinitionsReader.stub(:build_service_definition => service_definition)
+        service_directory.stub(fetch_remote_service_definition: definition_hash)
+        Angus::SDoc::DefinitionsReader.stub(build_service_definition: service_definition)
       end
 
       it 'gets the definition hash from the remote service' do
@@ -94,7 +92,5 @@ describe Angus::Remote::ServiceDirectory do
         service_directory.get_service_definition(code_name, version).should eq(service_definition)
       end
     end
-
   end
-
 end

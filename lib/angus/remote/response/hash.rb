@@ -1,9 +1,9 @@
+# frozen_string_literal: true
+
 module Angus
   module Remote
     module Response
-
       module Hash
-
         def elements
           @elements ||= {}
         end
@@ -16,13 +16,13 @@ module Angus
           hash = {}
 
           elements.each do |name, value|
-            if value.is_a?(Angus::Remote::Response::Hash)
-              hash[name] = value.to_hash
-            elsif value.is_a?(Array)
-              hash[name] = build_hash_from_array(value)
-            else
-              hash[name] = value
-            end
+            hash[name] = if value.is_a?(Angus::Remote::Response::Hash)
+                           value.to_hash
+                         elsif value.is_a?(Array)
+                           build_hash_from_array(value)
+                         else
+                           value
+                         end
           end
 
           hash
@@ -41,9 +41,7 @@ module Angus
             end
           end
         end
-
       end
-
     end
   end
 end

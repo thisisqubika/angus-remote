@@ -1,18 +1,16 @@
+# frozen_string_literal: true
+
 require_relative 'response/hash'
 
 module Angus
   module Remote
-
     # A service's response
     #
     # Acts as an array to store information at HTTP level, like the status_code
     class RemoteResponse < Struct
       include Angus::Remote::Response::Hash
 
-      attr_accessor :status
-      attr_accessor :status_code
-      attr_accessor :messages
-      attr_accessor :http_response_info
+      attr_accessor :status, :status_code, :messages, :http_response_info
 
       def initialize(*args)
         @http_response_info = {}
@@ -28,8 +26,6 @@ module Angus
           operation_name: @http_response_info[:operation_name]
         }
       end
-
     end
-
   end
 end

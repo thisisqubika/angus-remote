@@ -1,6 +1,7 @@
+# frozen_string_literal: true
+
 module Http
   module QueryParams
-
     # @return <String> This hash as a query string
     #
     # @example
@@ -11,9 +12,9 @@ module Http
     #       :phones => ['111-111-1111', '222-222-2222']
     #     }
     #   }.to_params
-    #     #=> "name=Bob&address[city]=Ruby Central&address[phones][]=111-111-1111&address[phones][]=222-222-2222&address[street]=111 Ruby Ave."
+    #     #=> "name=Bob&address[city]=Ruby Central&address[phones][]=111-111-1111&address[phones][]=222-222-2222"
     def self.to_params(hash)
-      params = hash.map { |k,v| normalize_param(k,v) }.join
+      params = hash.map { |k, v| normalize_param(k, v) }.join
       params.chop! # trailing &
       params
     end
@@ -25,13 +26,13 @@ module Http
     #
     # @example normalize_param(:name, "Bob Jones") #=> "name=Bob%20Jones&"
     def self.normalize_param(key, value)
-      param = ''
+      param = +''
       stack = []
 
       if value.is_a?(Array)
         param << value.map { |element| normalize_param("#{key}[]", element) }.join
       elsif value.is_a?(Hash)
-        stack << [key,value]
+        stack << [key, value]
       else
         param << "#{key}=#{URI.encode_www_form_component(value.to_s)}&"
       end
@@ -48,6 +49,5 @@ module Http
 
       param
     end
-
   end
 end

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'digest'
 require 'json'
 require 'yaml'
@@ -10,9 +12,7 @@ require_relative 'exceptions'
 
 module Angus
   module Remote
-
     module ServiceDirectory
-
       DEFAULT_VERSION = '0.1'
 
       # Builds and returns a Client object for the service and version received
@@ -29,19 +29,16 @@ module Angus
         version ||= service_version(code_name)
 
         @clients_cache ||= {}
-        if @clients_cache.include?([code_name, version])
-          return @clients_cache[[code_name, version]]
-        end
+        return @clients_cache[[code_name, version]] if @clients_cache.include?([code_name, version])
 
         begin
           service_definition = self.service_definition(code_name, version)
           client = Angus::Remote::Builder.build(code_name, service_definition,
-                                                self.api_url(code_name, version),
+                                                api_url(code_name, version),
                                                 service_settings(code_name, version))
           @clients_cache[[code_name, version]] = client
-
         rescue Errno::ECONNREFUSED => e
-          raise RemoteConnectionError.new("#{self.api_url(code_name, version)} - #{e.class}: #{e.message}")
+          raise RemoteConnectionError, "#{api_url(code_name, version)} - #{e.class}: #{e.message}"
         end
       end
 
@@ -100,11 +97,9 @@ module Angus
       def self.service_version(code_name)
         versions = service_configuration(code_name).keys
 
-        if versions.length == 1
-          versions.first.gsub(/^v/, '')
-        else
-          raise TooManyServiceVersions.new(code_name)
-        end
+        raise TooManyServiceVersions, code_name unless versions.length == 1
+
+        versions.first.gsub(/^v/, '')
       end
 
       # Returns the service's definition for the given service name and version
@@ -123,7 +118,7 @@ module Angus
           return @service_definitions_cache[[code_name, version]]
         end
 
-        service_definition = self.get_service_definition(code_name, version)
+        service_definition = get_service_definition(code_name, version)
         @service_definitions_cache[[code_name, version]] = service_definition
       end
 
@@ -138,13 +133,10 @@ module Angus
       #
       # @return [Angus::SDoc::Definitions::Service]
       def self.join_proxy(code_name, version, remote_code_name)
-
         service_definition = self.service_definition(code_name, version)
 
         @service_definitions_proxies ||= []
-        if @service_definitions_proxies.include?([code_name, version, remote_code_name])
-          return service_definition
-        end
+        return service_definition if @service_definitions_proxies.include?([code_name, version, remote_code_name])
 
         proxy_doc_url = self.proxy_doc_url(code_name, version, remote_code_name)
 
@@ -170,7 +162,7 @@ module Angus
         doc_url = self.doc_url(code_name, version)
 
         if doc_url.match('file://(.*)') || doc_url.match('file:///(.*)')
-          Angus::SDoc::DefinitionsReader.service_definition($1)
+          Angus::SDoc::DefinitionsReader.service_definition(::Regexp.last_match(1))
         else
           definition_hash = fetch_remote_service_definition(doc_url, code_name, version)
           Angus::SDoc::DefinitionsReader.build_service_definition(definition_hash)
@@ -186,7 +178,7 @@ module Angus
       # @return [Hash] Service definition hash
       def self.fetch_remote_service_definition(uri, code_name, version)
         uri = URI(uri)
-        uri.query = URI.encode_www_form({:format => :json})
+        uri.query = URI.encode_www_form({ format: :json })
 
         connection = Net::HTTP.new(uri.host, uri.port)
 
@@ -205,7 +197,7 @@ module Angus
 
         JSON(response.body)
       rescue Exception => e
-        raise RemoteConnectionError.new("#{uri} - #{e.class}: #{e.message}")
+        raise RemoteConnectionError, "#{uri} - #{e.class}: #{e.message}"
       end
       private_class_method :fetch_remote_service_definition
 
@@ -215,9 +207,9 @@ module Angus
         unless @authentication_clients.include?([code_name, version])
           service_settings = service_settings(code_name, version)
 
-          settings = { :public_key => service_settings['public_key'],
-                       :private_key => service_settings['private_key'],
-                       :service_id => "#{code_name}.#{version}" }
+          settings = { public_key: service_settings['public_key'],
+                       private_key: service_settings['private_key'],
+                       service_id: "#{code_name}.#{version}" }
 
           @authentication_clients[[code_name, version]] = Angus::Authentication::Client.new(settings)
         end
@@ -259,7 +251,7 @@ module Angus
         @services_configuration ||= load_services_configuration_file
 
         @services_configuration[code_name] or
-          raise ServiceConfigurationNotFound.new(code_name)
+          raise ServiceConfigurationNotFound, code_name
       end
       private_class_method :service_configuration
 
@@ -284,7 +276,6 @@ module Angus
         configuration
       end
       private_class_method :load_services_configuration_file
-
     end
   end
 end

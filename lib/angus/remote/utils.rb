@@ -1,22 +1,18 @@
+# frozen_string_literal: true
+
 require 'json'
 require 'uri'
+require 'securerandom'
 
 require_relative 'exceptions'
 require_relative 'http/query_params'
-require_relative 'http/multipart'
-require_relative 'http/multipart_methods/multipart_put'
-require_relative 'http/multipart_methods/multipart_post'
 
 module Angus
   module Remote
-
     module Utils
-
-      HTTP_METHODS_WITH_BODY  = %w(post put)
-
-      RE_PATH_PARAM = /:\w+/
-
-      SEVERE_STATUS_CODES     = %w(500 501 503)
+      HTTP_METHODS_WITH_BODY = %w[post put].freeze
+      RE_PATH_PARAM = /:\w+/.freeze
+      SEVERE_STATUS_CODES = %w[500 501 503].freeze
 
       # Builds a request for the given method, path and params.
       #
@@ -35,49 +31,76 @@ module Angus
       end
 
       def self.build_normal_request(method, path, params)
-        multipart_request = Http::Multipart.hash_contains_files?(params)
+        uri = URI(path)
+        multipart_request = params.values.any? { |v| v.respond_to?(:read) }
 
-        params = if multipart_request
-                   Http::Multipart::QUERY_STRING_NORMALIZER.call(params)
-                 else
-                   Http::QueryParams.to_params(params)
-                 end
-
-        if HTTP_METHODS_WITH_BODY.include?(method)
-          request = build_base_request(method, path, multipart_request)
-          request.body = params
+        if multipart_request
+          request = build_base_request(method, uri.to_s)
+          request.body = build_multipart_body(params)
+          request['Content-Type'] = "multipart/form-data; boundary=#{@boundary}"
+        elsif HTTP_METHODS_WITH_BODY.include?(method)
+          request = build_base_request(method, uri.to_s)
+          request.body = URI.encode_www_form(params)
+          request['Content-Type'] = 'application/x-www-form-urlencoded'
         else
-          uri = URI(path)
-          uri.query = params
-
+          uri.query = URI.encode_www_form(params)
           request = build_base_request(method, uri.to_s)
         end
 
         request
       end
 
-
-      def self.build_base_request(method, path, multipart_request = false)
+      def self.build_base_request(method, uri)
         case method.to_s.downcase
         when 'get'
-          Net::HTTP::Get.new(path)
+          Net::HTTP::Get.new(uri)
         when 'post'
-          multipart_request ? Http::MultipartMethods::Post.new(path) : Net::HTTP::Post.new(path)
+          Net::HTTP::Post.new(uri)
         when 'put'
-          multipart_request ? Http::MultipartMethods::Put.new(path) : Net::HTTP::Put.new(path)
+          Net::HTTP::Put.new(uri)
         when 'delete'
-          Net::HTTP::Delete.new(path)
+          Net::HTTP::Delete.new(uri)
         else
-          raise MethodArgumentError.new(method)
+          raise MethodArgumentError, method
         end
       end
 
       def self.build_json_request(method, path, params)
-        request = build_base_request(method, path)
-        request.body = JSON(params)
+        uri = URI(path)
+        request = build_base_request(method, uri.to_s)
         request['Content-Type'] = 'application/json'
-
+        request.body = params.to_json
         request
+      end
+
+      def self.build_multipart_body(params)
+        @boundary = "----RubyMultipartPost#{SecureRandom.hex}"
+        body = +''
+
+        params.each do |key, value|
+          body << "--#{@boundary}\r\n"
+          if value.respond_to?(:read)
+            body << "Content-Disposition: form-data; name=\"#{key}\"; filename=\"#{File.basename(value.path)}\"\r\n"
+            body << "Content-Type: #{mime_type(value.path)}\r\n\r\n"
+            body << value.read
+          else
+            body << "Content-Disposition: form-data; name=\"#{key}\"\r\n\r\n"
+            body << value.to_s
+          end
+          body << "\r\n"
+        end
+
+        body << "--#{@boundary}--\r\n"
+        body
+      end
+
+      def self.mime_type(path)
+        case File.extname(path)
+        when '.jpg' then 'image/jpeg'
+        when '.png' then 'image/png'
+        when '.gif' then 'image/gif'
+        else 'application/octet-stream'
+        end
       end
 
       # Builds the URI path. It applies the params to the path
@@ -96,9 +119,7 @@ module Angus
       #   build_path(path, path_params) #=> "/users/4201/profile/2"
       def self.build_path(path, path_params)
         matches = path.scan(RE_PATH_PARAM)
-        if matches.length != path_params.length
-          raise PathArgumentError.new(path_params.length, matches.length)
-        end
+        raise PathArgumentError.new(path_params.length, matches.length) if matches.length != path_params.length
 
         matches.each_with_index do |match, index|
           path = path.sub(match, path_params[index].to_s)
@@ -112,8 +133,6 @@ module Angus
         status_code = response.code.to_s
         SEVERE_STATUS_CODES.include?(status_code)
       end
-
     end
-
   end
 end

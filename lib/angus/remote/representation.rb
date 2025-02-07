@@ -1,8 +1,9 @@
+# frozen_string_literal: true
+
 require_relative 'response/hash'
 
 module Angus
   module Remote
-
     class Representation
       include Angus::Remote::Response::Hash
 
@@ -13,6 +14,5 @@ module Angus
         @elements = {}
       end
     end
-
   end
 end

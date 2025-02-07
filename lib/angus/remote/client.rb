@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'json'
 require 'persistent_http'
 
@@ -9,29 +11,28 @@ require_relative 'settings'
 
 module Angus
   module Remote
-
     # A client for service invocation
     class Client
       def initialize(api_url, timeout = nil, options = {})
         api_url = api_url[0..-2] if api_url[-1] == '/'
 
         @connection = PersistentHTTP.new(
-          :pool_size    => options['pool_size'] || 10,
-          :pool_timeout => 10,
-          :warn_timeout => 0.25,
-          :force_retry  => false,
-          :url          => api_url,
+          pool_size: options['pool_size'] || 10,
+          pool_timeout: 10,
+          warn_timeout: 0.25,
+          force_retry: false,
+          url: api_url,
 
-          :read_timeout => timeout,
-          :open_timeout => timeout
+          read_timeout: timeout,
+          open_timeout: timeout
         )
 
         @api_base_path = @connection.default_path
 
         store_namespace = "#{options['code_name']}.#{options['version']}"
-        client_settings = { :public_key => options['public_key'],
-                            :private_key => options['private_key'],
-                            :service_id => store_namespace }
+        client_settings = { public_key: options['public_key'],
+                            private_key: options['private_key'],
+                            service_id: store_namespace }
 
         @authentication_client = Authentication::Client.new(client_settings)
       end
@@ -63,13 +64,11 @@ module Angus
 
           response = @connection.request(request)
 
-          if Utils.severe_error_response?(response)
-            raise RemoteSevereError.new(get_error_messages(response.body))
-          end
+          raise RemoteSevereError, get_error_messages(response.body) if Utils.severe_error_response?(response)
 
           response
         rescue Errno::ECONNREFUSED, PersistentHTTP::Error => e
-          raise RemoteConnectionError.new("#@api_base_path - #{e.class}: #{e.message}")
+          raise RemoteConnectionError, "#{@api_base_path} - #{e.class}: #{e.message}"
         end
       end
 
@@ -80,11 +79,14 @@ module Angus
       private
 
       def get_error_messages(response_body)
-        json_response = JSON(response_body) rescue { 'messages' => [] }
-        Response::Builder::build_messages(json_response['messages'])
+        json_response = begin
+          JSON(response_body)
+        rescue StandardError
+          { 'messages' => [] }
+        end
+
+        Response::Builder.build_messages(json_response['messages'])
       end
-
     end
-
   end
 end

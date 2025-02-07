@@ -1,10 +1,11 @@
+# frozen_string_literal: true
+
 require 'digest'
 require 'time'
 
 module Angus
   module Authentication
     class Client
-
       BAAS_VERSION = 1
 
       AUTHENTICATION_HEADER = 'AUTHORIZATION'
@@ -18,12 +19,12 @@ module Angus
         @public_key = opts[:public_key]
         @private_key = opts[:private_key]
 
-        if disabled?
-          warn(
-            "No authentication info provided, angus-authentication has been disabled for: " \
-            "#{opts[:service_id]}"
-          )
-        end
+        return unless disabled?
+
+        warn(
+          'No authentication info provided, angus-authentication has been disabled for: ' \
+          "#{opts[:service_id]}"
+        )
       end
 
       def prepare_request(request, http_method, operation_path)
@@ -39,6 +40,7 @@ module Angus
       end
 
       private
+
       def disabled?
         !(@public_key || @private_key)
       end
@@ -52,7 +54,6 @@ module Angus
 
         Digest::SHA1.hexdigest(plain_signature)
       end
-
     end
   end
 end

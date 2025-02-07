@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'json'
 
 require_relative 'builder'
@@ -5,9 +7,7 @@ require_relative 'builder'
 module Angus
   module Remote
     module Response
-
       module Serializer
-
         def self.serialize(response)
           h = {}
           h['status_code'] = response.http_response_info[:status_code]
@@ -22,22 +22,21 @@ module Angus
           JSON(h)
         end
 
-        def self.unserialize(s)
-          s = JSON(s)
+        def self.unserialize(serialized_response)
+          serialized_response = JSON(serialized_response)
 
-          service_code_name = s['service_code_name']
-          version = s['service_version']
+          service_code_name = serialized_response['service_code_name']
+          version = serialized_response['service_version']
 
-          operation_code_name = s['operation_code_name']
-          operation_namespace = s['operation_namespace']
-          status_code = s['status_code']
-          body = s['body']
+          operation_code_name = serialized_response['operation_code_name']
+          operation_namespace = serialized_response['operation_namespace']
+          status_code = serialized_response['status_code']
+          body = serialized_response['body']
 
           Response::Builder.build(status_code, body, service_code_name, version,
                                   operation_namespace, operation_code_name)
         end
       end
-
     end
   end
 end

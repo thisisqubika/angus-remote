@@ -1,12 +1,12 @@
+# frozen_string_literal: true
+
 require_relative 'client'
 require_relative 'response/builder'
 require_relative 'settings'
 
 module Angus
   module Remote
-
     module Builder
-
       # Builds a client for a specific service.
       #
       # @param [String] code_name The service's name known to the service directory
@@ -23,20 +23,20 @@ module Angus
         if service_definition.operations.is_a?(Hash)
           service_definition.operations.each do |namespace, operations|
             operations.each do |operation|
-              self.define_operation(remote_service_class, namespace, operation, code_name,
-                                    service_definition)
+              define_operation(remote_service_class, namespace, operation, code_name,
+                               service_definition)
             end
           end
         else
           service_definition.operations.each do |operation|
-            self.define_operation(remote_service_class, code_name, operation, code_name,
-                                  service_definition)
+            define_operation(remote_service_class, code_name, operation, code_name,
+                             service_definition)
           end
         end
 
         service_definition.proxy_operations.each do |operation|
-          self.define_proxy_operation(remote_service_class, operation.service_name, operation,
-                                      code_name, service_definition)
+          define_proxy_operation(remote_service_class, operation.service_name, operation,
+                                 code_name, service_definition)
         end
 
         remote_service_class.new(api_url, Settings.default_timeout, options)
@@ -63,10 +63,10 @@ module Angus
                                   path_params, request_params)
 
           Angus::Remote::Response::Builder.build_from_remote_response(response,
-                                                                        service_code_name,
-                                                                        service_definition.version,
-                                                                        namespace,
-                                                                        operation.code_name)
+                                                                      service_code_name,
+                                                                      service_definition.version,
+                                                                      namespace,
+                                                                      operation.code_name)
         end
       end
 
@@ -89,7 +89,7 @@ module Angus
           encode_as_json = Angus::Remote::Builder.extract_var_arg!(args, TrueClass) || false
 
           request_params = Angus::Remote::Builder.apply_glossary(service_definition.glossary,
-                                                                   request_params)
+                                                                 request_params)
 
           request_params = Angus::Remote::Builder.escape_request_params(request_params)
 
@@ -97,10 +97,10 @@ module Angus
                                   path_params, request_params)
 
           Angus::Remote::Response::Builder.build_from_remote_response(response,
-                                                                        service_code_name,
-                                                                        service_definition.version,
-                                                                        namespace,
-                                                                        operation.code_name)
+                                                                      service_code_name,
+                                                                      service_definition.version,
+                                                                      namespace,
+                                                                      operation.code_name)
         end
       end
 
@@ -125,7 +125,6 @@ module Angus
 
         remote_service_class
       end
-
 
       # Applies glossary to params.
       #
@@ -163,25 +162,23 @@ module Angus
         arg_found = false
 
         i = args.length
-        while !arg_found && i > 0
+        while !arg_found && i.positive?
           i -= 1
           arg = args[i]
           arg_found = true if arg.is_a?(klass)
         end
 
-        if arg_found
-          args.delete_at(i)
-          arg
-        end
+        return unless arg_found
+
+        args.delete_at(i)
+        arg
       end
 
       def self.escape_request_params(request_params)
         encoded = {}
         request_params.each do |name, value|
           encoded_name = CGI.escape(name.to_s)
-          if value.is_a? Hash
-            value = self.escape_request_params(value)
-          end
+          value = escape_request_params(value) if value.is_a? Hash
           encoded[encoded_name] = value
         end
 
