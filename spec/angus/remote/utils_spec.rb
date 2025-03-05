@@ -8,24 +8,23 @@ require 'fakefs/spec_helpers'
 
 require 'angus/remote/utils'
 
+# rubocop:disable Metrics/BlockLength
 describe Angus::Remote::Utils do
   include FakeFS::SpecHelpers
 
-  subject(:utils) { Angus::Remote::Utils }
+  subject(:utils) { described_class }
 
   describe '.build_request' do
-    let(:request) { utils.build_request(:get, '/listing', q: 'spec') }
+    subject { utils.build_request(:get, '/listing', { q: 'spec' }) }
 
-    it 'returns a Net::HTTPRequest object' do
-      request.should be_kind_of(Net::HTTPRequest)
-    end
+    it { is_expected.to be_a(Net::HTTPRequest) }
 
     context 'when not encoding as json' do
       subject { utils.build_request(:get, '/listing', { q: 'spec' }, false) }
 
       describe 'the built request' do
-        its(:method) { should eq('GET') }
-        its(:path) { should eq('/listing?q=spec') }
+        its(:method) { is_expected.to eq('GET') }
+        its(:path) { is_expected.to eq('/listing?q=spec') }
       end
     end
 
@@ -33,9 +32,9 @@ describe Angus::Remote::Utils do
       subject { utils.build_request(:get, '/listing', { q: 'spec' }, true) }
 
       describe 'the built request' do
-        its(:method) { should eq('GET') }
-        its(:path) { should eq('/listing') }
-        its(:body) { should eq(JSON({ q: 'spec' })) }
+        its(:method) { is_expected.to eq('GET') }
+        its(:path) { is_expected.to eq('/listing') }
+        its(:body) { is_expected.to eq(JSON({ q: 'spec' })) }
       end
     end
   end
@@ -53,11 +52,9 @@ describe Angus::Remote::Utils do
 
     shared_examples 'a client builder' do |method, kind_of|
       context "when #{method}" do
-        it "returns a kind_of #{kind_of}" do
-          res = utils.build_base_request(method, path)
+        let(:request) { utils.build_base_request(method, path) }
 
-          res.should be_a(kind_of)
-        end
+        it { expect(request).to be_a(kind_of) }
       end
     end
 
@@ -69,10 +66,9 @@ describe Angus::Remote::Utils do
 
   describe '.severe_error_response?' do
     shared_examples 'a status checker' do |code|
-      it "is true when code = #{code}" do
-        response = double(:response, code: code)
-        utils.severe_error_response?(response).should be
-      end
+      let(:response) { double(:response, code: code) }
+
+      it { expect(utils.severe_error_response?(response)).to be true }
     end
 
     it_behaves_like 'a status checker', 500
@@ -82,19 +78,15 @@ describe Angus::Remote::Utils do
 
   describe '.build_path' do
     let(:path) { '/users/:user_id/profile/:profile_id' }
+    let(:path_params) { [4201, 2] }
+    let(:builded_path) { utils.build_path(path, path_params) }
 
-    it 'buils a path using the given params' do
-      path_params = [4201, 2]
+    it { expect(builded_path).to eq('/users/4201/profile/2') }
 
-      res = utils.build_path(path, path_params)
-
-      res.should eq('/users/4201/profile/2')
-    end
-
-    it 'raises a PathArgumentError when received more args than needed' do
+    context 'when received more args than needed' do
       path_params = %i[more args than needed]
 
-      expect { utils.build_path(path, path_params) }.to raise_error(Angus::Remote::PathArgumentError)
+      it { expect { utils.build_path(path, path_params) }.to raise_error(Angus::Remote::PathArgumentError) }
     end
 
     it 'raises a PathArgumentError when received less args than needed' do
@@ -111,9 +103,9 @@ describe Angus::Remote::Utils do
       describe 'the built request' do
         subject { utils.build_normal_request(method, '/listing', { q: 'spec' }) }
 
-        its(:method) { should eq(method.upcase) }
-        its(:path) { should eq('/listing?q=spec') }
-        its(:body) { should be_nil }
+        its(:method) { is_expected.to eq(method.upcase) }
+        its(:path) { is_expected.to eq('/listing?q=spec') }
+        its(:body) { is_expected.to be_nil }
       end
     end
 
@@ -121,9 +113,9 @@ describe Angus::Remote::Utils do
       describe 'the built request' do
         subject { utils.build_normal_request(method, '/listing', { q: 'spec' }) }
 
-        its(:method) { should eq(method.upcase) }
-        its(:path) { should eq('/listing') }
-        its(:body) { should eq('q=spec') }
+        its(:method) { is_expected.to eq(method.upcase) }
+        its(:path) { is_expected.to eq('/listing') }
+        its(:body) { is_expected.to eq('q=spec') }
       end
     end
 
@@ -132,7 +124,7 @@ describe Angus::Remote::Utils do
     it_behaves_like 'a method with body', 'post'
     it_behaves_like 'a method with body', 'put'
 
-    context 'a multipart request' do
+    context 'when it is a multipart request' do
       let(:file_name) { 'some_file.txt' }
 
       let(:file) { File.new(file_name) }
@@ -150,8 +142,8 @@ describe Angus::Remote::Utils do
       describe 'the built request' do
         subject { request }
 
-        its(:method) { should eq('POST') }
-        its(:path) { should eq('/files') }
+        its(:method) { is_expected.to eq('POST') }
+        its(:path) { is_expected.to eq('/files') }
       end
     end
   end
@@ -166,13 +158,9 @@ describe Angus::Remote::Utils do
     end
 
     describe 'the returned request' do
-      it 'its Content-Type header = application/json' do
-        request['Content-Type'].should eq('application/json')
-      end
-
-      it 'its body = JSON encoded params' do
-        request.body.should eq(JSON(params))
-      end
+      it { expect(request['Content-Type']).to eq('application/json') }
+      it { expect(request.body).to eq(JSON(params)) }
     end
   end
 end
+# rubocop:enable Metrics/BlockLength

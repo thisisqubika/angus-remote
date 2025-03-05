@@ -2,7 +2,7 @@
 
 module Angus
   module Remote
-    class RemoteSevereError < Exception
+    class RemoteSevereError < StandardError
       attr_reader :messages
 
       def initialize(messages)
@@ -12,7 +12,7 @@ module Angus
       end
     end
 
-    class RemoteConnectionError < Exception
+    class RemoteConnectionError < StandardError
       def initialize(url)
         @remote_url = url
 
@@ -24,7 +24,7 @@ module Angus
       end
     end
 
-    class MethodArgumentError < Exception
+    class MethodArgumentError < StandardError
       def initialize(method)
         @method = method
 
@@ -36,7 +36,7 @@ module Angus
       end
     end
 
-    class PathArgumentError < Exception
+    class PathArgumentError < StandardError
       def initialize(current, expected)
         @current = current
         @expected = expected
@@ -49,7 +49,7 @@ module Angus
       end
     end
 
-    class ServiceConfigurationNotFound < Exception
+    class ServiceConfigurationNotFound < StandardError
       def initialize(code_name, version = nil)
         @code_name = code_name
         @version = version

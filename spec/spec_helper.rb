@@ -10,8 +10,8 @@ require 'rspec/its'
 require 'simplecov-rcov'
 require 'simplecov-rcov-text'
 
-SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
-  SimpleCov::Formatter::HTMLFormatter,
-  SimpleCov::Formatter::RcovFormatter,
-  SimpleCov::Formatter::RcovTextFormatter
-]
+SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
+                                                                 SimpleCov::Formatter::HTMLFormatter,
+                                                                 SimpleCov::Formatter::RcovFormatter,
+                                                                 SimpleCov::Formatter::RcovTextFormatter
+                                                               ])

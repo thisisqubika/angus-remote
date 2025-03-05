@@ -1,41 +1,46 @@
-Metrics/BlockLength:
-  Enabled: false
+AllCops:
+  NewCops: enable
+  Exclude:
+    - 'coverage/**/*'
 
 Metrics/MethodLength:
-  Enabled: false
+  Max: 30
 
 Metrics/CyclomaticComplexity:
-  Enabled: false
+  Max: 10
 
 Style/Documentation:
   Enabled: false
 
 Metrics/AbcSize:
-  Enabled: false
-
-Style/OptionalBooleanParameter:
-  Enabled: false
-
-Lint/RescueException:
-  Enabled: false
+  Max: 25
 
 Metrics/ModuleLength:
-  Enabled: false
+  Max: 150
 
 Metrics/PerceivedComplexity:
-  Enabled: false
+  Max: 10
 
 Metrics/ParameterLists:
-  Enabled: false
-
-Lint/InheritException:
-  Enabled: false
+  Max: 8
 
 Naming/FileName:
+  Exclude:
+    - 'lib/angus-remote.rb'
+
+RSpec/VerifiedDoubles:
   Enabled: false
 
-Style/EvalWithLocation:
+RSpec/AnyInstance:
   Enabled: false
 
-Naming/HeredocDelimiterNaming:
-  Enabled: false
+RSpec/MultipleMemoizedHelpers:
+  Max: 10
+
+RSpec/NestedGroups:
+  Max: 5
+
+plugins:
+  - rubocop-performance
+  - rubocop-rspec
+  - rubocop-thread_safety

@@ -17,6 +17,7 @@ require_relative '../../unmarshalling'
 module Angus
   module Remote
     module Response
+      # rubocop:disable Metrics/ModuleLength
       module Builder
         # Builds a Response
         #
@@ -45,6 +46,7 @@ module Angus
                                 service_definition, operation_namespace, operation_code_name)
         end
 
+        # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
         def self.build_from_definition(status_code, body, service_code_name, service_version,
                                        service_definition, operation_namespace, operation_code_name)
           representations = service_definition.representations
@@ -90,11 +92,13 @@ module Angus
 
           response
         end
+        # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
 
         # Builds the methods for each value / object / array
         #
         # The response parameter should contain in the body, encoded as json, the values / objects
         # specified in the operation response metadata
+        # rubocop:disable Metrics/AbcSize, Metrics/PerceivedComplexity
         def self.build_response_method(json_response, representations_hash, glossary_terms_hash, element)
           if json_response.key?(element.name)
             hash_value = json_response[element.name]
@@ -127,6 +131,7 @@ module Angus
 
           object_value
         end
+        # rubocop:enable Metrics/AbcSize, Metrics/PerceivedComplexity
 
         # Builds a Response based on a service's response
         #
@@ -180,6 +185,7 @@ module Angus
 
         # Receives a hash, a type and an array of representations and
         # build an object that has one method for each attribute of the type.
+        # rubocop:disable Metrics/MethodLength, Metrics/CyclomaticComplexity, Metrics/AbcSize, Metrics/PerceivedComplexity
         def self.build_from_representation(hash_value, type, representations, glossary_terms_hash)
           return nil if hash_value.nil?
 
@@ -232,6 +238,7 @@ module Angus
 
           representation_object
         end
+        # rubocop:enable Metrics/MethodLength, Metrics/CyclomaticComplexity, Metrics/AbcSize, Metrics/PerceivedComplexity
 
         # Builds an array of objects that corresponds to the received type
         def self.build_collection_from_representation(value_array, type, representations,
@@ -275,6 +282,7 @@ module Angus
           hash
         end
       end
+      # rubocop:enable Metrics/ModuleLength
     end
   end
 end

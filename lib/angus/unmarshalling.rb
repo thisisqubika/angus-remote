@@ -9,27 +9,16 @@ module Angus
       return nil if scalar.nil?
 
       case type
-      when :string
-        # scalar.force_encoding(Encoding::UTF_8)
-        scalar
-      when :integer
-        scalar
-      when :boolean
+      when :string, :integer, :boolean, :object
         scalar
       when :date
         Date.iso8601(scalar)
       when :date_time
         DateTime.iso8601(scalar)
       when :decimal
-        begin
-          BigDecimal(scalar) # Para Ruby 2.4+, JRuby
-        rescue NoMethodError
-          BigDecimal.new(scalar) # Para Ruby < 2.4
-        end
-      when :object
-        scalar
+        BigDecimal(scalar)
       else
-        raise ArgumentError, "Unkonwn type: #{type}"
+        raise ArgumentError, "Unknown type: #{type}"
       end
     end
   end

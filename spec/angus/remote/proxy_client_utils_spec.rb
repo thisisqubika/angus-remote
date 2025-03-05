@@ -6,8 +6,9 @@ require 'json'
 
 require 'angus/remote/proxy_client_utils'
 
+# rubocop:disable Metrics/BlockLength
 describe Angus::Remote::ProxyClientUtils do
-  subject(:utils) { Angus::Remote::ProxyClientUtils }
+  subject(:utils) { described_class }
 
   describe '.build_request' do
     let(:path) { '/' }
@@ -16,9 +17,7 @@ describe Angus::Remote::ProxyClientUtils do
     shared_examples 'a request builder' do |method, kind_of|
       context "when #{method}" do
         it "returns a kind_of #{kind_of}" do
-          res = utils.build_request(method, path, query)
-
-          res.should be_a(kind_of)
+          expect(utils.build_request(method, path, query)).to be_a(kind_of)
         end
       end
     end
@@ -29,72 +28,55 @@ describe Angus::Remote::ProxyClientUtils do
     it_behaves_like 'a request builder', :delete,  Net::HTTP::Delete
 
     context 'with headers' do
-      it 'sets the to the request' do
-        headers = { 'a' => 'A', 'b' => 'B' }
+      let(:headers) { { 'a' => 'A', 'b' => 'B' } }
+      let(:request) { utils.build_request(:get, path, query, headers) }
 
-        res = utils.build_request(:get, path, query, headers)
-
-        res['a'].should eq('A')
-        res['b'].should eq('B')
-      end
+      it { expect(request['a']).to eq('A') }
+      it { expect(request['b']).to eq('B') }
     end
 
     context 'with body' do
-      it 'sets the body to the request' do
-        body = 'BODY'
+      let(:body) { 'BODY' }
+      let(:request) { utils.build_request(:get, path, query, {}, body) }
 
-        res = utils.build_request(:get, path, query, {}, body)
-
-        res.body.should eq(body)
-      end
+      it { expect(request.body).to eq(body) }
     end
 
     context 'when invalid http method' do
-      it 'raises MethodArgumentError' do
-        expect do
-          utils.build_request(:invalid, path, query)
-        end.to raise_error(Angus::Remote::MethodArgumentError)
-      end
+      it { expect { utils.build_request(:invalid, path, query) }.to raise_error(Angus::Remote::MethodArgumentError) }
     end
   end
 
   describe '.filter_response_headers' do
-    it 'rejects non allowed headers' do
-      headers = { not_allowed: 'header' }
+    context 'when non allowed headers' do
+      let(:headers) { { not_allowed: 'header' } }
+      let(:res) { utils.filter_response_headers(headers) }
 
-      res = utils.filter_response_headers(headers)
-
-      res.should_not include(:not_allowed)
+      it { expect(res).not_to include(:not_allowed) }
     end
 
-    it 'does not reject allowed headers' do
-      headers = { 'content-type' => 'header' }
+    context 'when allowed headers' do
+      let(:headers) { { 'content-type' => 'header' } }
+      let(:res) { utils.filter_response_headers(headers) }
 
-      res = utils.filter_response_headers(headers)
-
-      res.should include('content-type')
+      it { expect(res).to include('content-type') }
     end
   end
 
   describe '.normalize_headers' do
     context 'when a header value is an array' do
-      it 'takes the first array element' do
-        headers = { 'content-type' => ['application/json', 'image/gif'] }
+      let(:headers) { { 'content-type' => ['application/json', 'image/gif'] } }
+      let(:res) { utils.normalize_headers(headers) }
 
-        res = utils.normalize_headers(headers)
-
-        res.should include('content-type' => 'application/json')
-      end
+      it { expect(res).to include('content-type' => 'application/json') }
     end
 
     context 'when simple headers' do
-      it 'does not affect anything' do
-        headers = { 'content-type' => 'application/json' }
+      let(:headers) { { 'content-type' => 'application/json' } }
+      let(:res) { utils.normalize_headers(headers) }
 
-        res = utils.normalize_headers(headers)
-
-        res.should include('content-type' => 'application/json')
-      end
+      it { expect(res).to include('content-type' => 'application/json') }
     end
   end
 end
+# rubocop:enable Metrics/BlockLength

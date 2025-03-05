@@ -15,7 +15,7 @@ module Angus
       def initialize(*args)
         @http_response_info = {}
 
-        super(*args)
+        super
       end
 
       def to_hash

@@ -40,7 +40,7 @@ module Angus
       end
 
       def self.filter_response_headers(headers)
-        headers.select { |h, _v| ALLOWED_RESPONSE_HEADERS.include?(h) }
+        headers.slice(*ALLOWED_RESPONSE_HEADERS)
       end
 
       # Converts any header value that is an array to its first value.
@@ -54,15 +54,7 @@ module Angus
       #
       #   -> {'content-type'=>'application/json;charset=utf-8'}
       def self.normalize_headers(headers)
-        normalized = headers.map do |h, v|
-          if v.is_a?(Array)
-            [h, v.first]
-          else
-            [h, v]
-          end
-        end
-
-        Hash[normalized]
+        headers.transform_values { |v| v.is_a?(Array) ? v.first : v }
       end
     end
   end

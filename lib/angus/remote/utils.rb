@@ -22,6 +22,7 @@ module Angus
       # @param [String] encode_as_json
       #
       # @return (see .build_base_request)
+      # rubocop:disable Style/OptionalBooleanParameter
       def self.build_request(method, path, request_params = {}, encode_as_json = false)
         if encode_as_json
           build_json_request(method, path, request_params)
@@ -29,6 +30,7 @@ module Angus
           build_normal_request(method, path, request_params)
         end
       end
+      # rubocop:enable Style/OptionalBooleanParameter
 
       def self.build_normal_request(method, path, params)
         uri = URI(path)
@@ -36,8 +38,8 @@ module Angus
 
         if multipart_request
           request = build_base_request(method, uri.to_s)
-          request.body = build_multipart_body(params)
-          request['Content-Type'] = "multipart/form-data; boundary=#{@boundary}"
+          request.body, boundary = build_multipart_body(params)
+          request['Content-Type'] = "multipart/form-data; boundary=#{boundary}"
         elsif HTTP_METHODS_WITH_BODY.include?(method)
           request = build_base_request(method, uri.to_s)
           request.body = URI.encode_www_form(params)
@@ -74,11 +76,11 @@ module Angus
       end
 
       def self.build_multipart_body(params)
-        @boundary = "----RubyMultipartPost#{SecureRandom.hex}"
+        boundary = "----RubyMultipartPost#{SecureRandom.hex}"
         body = +''
 
         params.each do |key, value|
-          body << "--#{@boundary}\r\n"
+          body << "--#{boundary}\r\n"
           if value.respond_to?(:read)
             body << "Content-Disposition: form-data; name=\"#{key}\"; filename=\"#{File.basename(value.path)}\"\r\n"
             body << "Content-Type: #{mime_type(value.path)}\r\n\r\n"
@@ -90,8 +92,8 @@ module Angus
           body << "\r\n"
         end
 
-        body << "--#{@boundary}--\r\n"
-        body
+        body << "--#{boundary}--\r\n"
+        [body, boundary]
       end
 
       def self.mime_type(path)

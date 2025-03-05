@@ -21,19 +21,13 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = '>= 2.5.0'
 
   spec.files         = Dir.glob('{lib}/**/*')
-  spec.test_files    = Dir.glob('{spec/angus}/**/*')
   spec.require_paths = %w[lib]
 
   spec.add_dependency('angus-sdoc', '~> 0.0', '>= 0.0.6')
+  spec.add_dependency('bigdecimal', '~> 3.1')
+  spec.add_dependency('concurrent-ruby', '~> 1.3')
+
   spec.add_dependency('persistent_http', '~> 2.0.3')
 
-  spec.add_development_dependency('ci_reporter')
-  spec.add_development_dependency('fakefs')
-  spec.add_development_dependency('rake')
-  spec.add_development_dependency('rspec')
-  spec.add_development_dependency('rspec-its')
-  spec.add_development_dependency('rubocop')
-  spec.add_development_dependency('simplecov')
-  spec.add_development_dependency('simplecov-rcov')
-  spec.add_development_dependency('simplecov-rcov-text')
+  spec.metadata['rubygems_mfa_required'] = 'true'
 end

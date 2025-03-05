@@ -19,12 +19,9 @@ describe Http::QueryParams do
     end
 
     it 'returns the expected string' do
-      Http::QueryParams.to_params(params).should eq(
-        'name=Bob&address[phones][]=111-111-1111' \
-        '&address[phones][]=222-222-2222' \
-        '&address[street]=111+Ruby+Ave.' \
-        '&address[zone][country]=Ruby' \
-        '&address[zone][city]=Gem+Central'
+      expect(described_class.to_params(params)).to eq(
+        'name=Bob&address[phones][]=111-111-1111&address[phones][]=222-222-2222&address[street]=111+Ruby+Ave.' \
+        '&address[zone][country]=Ruby&address[zone][city]=Gem+Central'
       )
     end
   end

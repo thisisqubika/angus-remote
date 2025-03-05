@@ -113,7 +113,7 @@ module Angus
       def self.build_client_class(service_name)
         remote_service_class = Class.new(Angus::Remote::Client)
 
-        remote_service_class.class_eval <<-END
+        remote_service_class.class_eval <<-CLIENT_CLASS_DEFINITION, __FILE__, __LINE__ + 1
           def self.name
             "#<Client_#{service_name}>"
           end
@@ -121,7 +121,7 @@ module Angus
           def self.to_s
             name
           end
-        END
+        CLIENT_CLASS_DEFINITION
 
         remote_service_class
       end

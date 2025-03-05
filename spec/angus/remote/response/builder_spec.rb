@@ -7,7 +7,7 @@ require 'angus/remote/response/builder'
 require 'angus/remote/remote_response'
 
 describe Angus::Remote::Response::Builder do
-  subject(:builder) { Angus::Remote::Response::Builder }
+  subject(:builder) { described_class }
 
   let(:raw_response) { { 'user' => {} } }
   let(:email_field) do
@@ -26,14 +26,12 @@ describe Angus::Remote::Response::Builder do
 
   describe '.build_from_representation' do
     subject do
-      Angus::Remote::Response::Builder.build_from_representation(nil, double(:type), double(:representations),
-                                                                 double(:glossary_terms_hash))
+      described_class.build_from_representation(nil, double(:type), double(:representations),
+                                                double(:glossary_terms_hash))
     end
 
-    context 'hash_value is nil' do
-      it 'should return nil' do
-        is_expected.to be_nil
-      end
+    context 'when hash_value is nil' do
+      it { is_expected.to be_nil }
     end
   end
 end

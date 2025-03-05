@@ -3,6 +3,8 @@
 require 'digest'
 require 'json'
 require 'yaml'
+require 'monitor'
+require 'concurrent'
 
 require 'angus/sdoc'
 require 'angus/authentication/client'
@@ -15,12 +17,22 @@ module Angus
     module ServiceDirectory
       DEFAULT_VERSION = '0.1'
 
+      # Use monitor for thread-safe operations
+      @monitor = Monitor.new
+
+      # Use thread-safe collections
+      @clients_cache = Concurrent::Map.new
+      @service_definitions_cache = Concurrent::Map.new
+      @authentication_clients = Concurrent::Map.new
+      @service_definitions_proxies = Concurrent::Set.new
+
       # Builds and returns a Client object for the service and version received
       def self.lookup(*args)
         if args.length == 1
           definition = args.first
           code_name = definition.delete(:code_name)
           version = definition.delete(:version) || DEFAULT_VERSION
+
           set_service_configuration(code_name, version, definition)
         else
           code_name, version = args
@@ -28,15 +40,19 @@ module Angus
 
         version ||= service_version(code_name)
 
-        @clients_cache ||= {}
-        return @clients_cache[[code_name, version]] if @clients_cache.include?([code_name, version])
+        # rubocop:disable ThreadSafety/ClassInstanceVariable
+        return @clients_cache[[code_name, version]] if @clients_cache[[code_name, version]]
+        # rubocop:enable ThreadSafety/ClassInstanceVariable
 
         begin
           service_definition = self.service_definition(code_name, version)
           client = Angus::Remote::Builder.build(code_name, service_definition,
                                                 api_url(code_name, version),
                                                 service_settings(code_name, version))
+
+          # rubocop:disable ThreadSafety/ClassInstanceVariable
           @clients_cache[[code_name, version]] = client
+          # rubocop:enable ThreadSafety/ClassInstanceVariable
         rescue Errno::ECONNREFUSED => e
           raise RemoteConnectionError, "#{api_url(code_name, version)} - #{e.class}: #{e.message}"
         end
@@ -52,9 +68,7 @@ module Angus
       # @raise (see .service_version)
       def self.doc_url(code_name, version = nil)
         version ||= service_version(code_name)
-
         config = service_configuration(code_name)
-
         config["v#{version}"]['doc_url']
       end
 
@@ -67,7 +81,6 @@ module Angus
       # @return [String]
       def self.proxy_doc_url(code_name, version, remote_code_name)
         doc_url = self.doc_url(code_name, version)
-
         "#{doc_url}/proxy/#{remote_code_name}"
       end
 
@@ -81,9 +94,7 @@ module Angus
       # @raise (see .service_version)
       def self.api_url(code_name, version = nil)
         version ||= service_version(code_name)
-
         config = service_configuration(code_name)
-
         config["v#{version}"]['api_url']
       end
 
@@ -113,13 +124,11 @@ module Angus
       def self.service_definition(code_name, version = nil)
         version ||= service_version(code_name)
 
-        @service_definitions_cache ||= {}
-        if @service_definitions_cache.include?([code_name, version])
-          return @service_definitions_cache[[code_name, version]]
+        # rubocop:disable ThreadSafety/ClassInstanceVariable
+        @service_definitions_cache.compute_if_absent([code_name, version]) do
+          get_service_definition(code_name, version)
         end
-
-        service_definition = get_service_definition(code_name, version)
-        @service_definitions_cache[[code_name, version]] = service_definition
+        # rubocop:enable ThreadSafety/ClassInstanceVariable
       end
 
       # Queries a service for definitions of proxy operations for the given remote service.
@@ -135,16 +144,18 @@ module Angus
       def self.join_proxy(code_name, version, remote_code_name)
         service_definition = self.service_definition(code_name, version)
 
-        @service_definitions_proxies ||= []
+        # rubocop:disable ThreadSafety/ClassInstanceVariable
         return service_definition if @service_definitions_proxies.include?([code_name, version, remote_code_name])
+        # rubocop:enable ThreadSafety/ClassInstanceVariable
 
         proxy_doc_url = self.proxy_doc_url(code_name, version, remote_code_name)
-
         definition_hash = fetch_remote_service_definition(proxy_doc_url, code_name, version)
-
         proxy_service_definition = Angus::SDoc::DefinitionsReader.build_service_definition(definition_hash)
 
-        service_definition.merge(proxy_service_definition)
+        @monitor.synchronize do
+          service_definition.merge(proxy_service_definition)
+          @service_definitions_proxies.add([code_name, version, remote_code_name])
+        end
 
         service_definition
       end
@@ -189,32 +200,30 @@ module Angus
 
         response = connection.start do |http|
           request = Net::HTTP::Get.new(uri.request_uri)
-
           authentication_client(code_name, version).prepare_request(request, 'GET', uri.path)
-
           http.request(request)
         end
 
         JSON(response.body)
-      rescue Exception => e
+      rescue StandardError => e
         raise RemoteConnectionError, "#{uri} - #{e.class}: #{e.message}"
       end
       private_class_method :fetch_remote_service_definition
 
       def self.authentication_client(code_name, version)
-        @authentication_clients ||= {}
-
-        unless @authentication_clients.include?([code_name, version])
+        # rubocop:disable ThreadSafety/ClassInstanceVariable
+        @authentication_clients.compute_if_absent([code_name, version]) do
           service_settings = service_settings(code_name, version)
 
-          settings = { public_key: service_settings['public_key'],
-                       private_key: service_settings['private_key'],
-                       service_id: "#{code_name}.#{version}" }
+          settings = {
+            public_key: service_settings['public_key'],
+            private_key: service_settings['private_key'],
+            service_id: "#{code_name}.#{version}"
+          }
 
-          @authentication_clients[[code_name, version]] = Angus::Authentication::Client.new(settings)
+          Angus::Authentication::Client.new(settings)
         end
-
-        @authentication_clients[[code_name, version]]
+        # rubocop:enable ThreadSafety/ClassInstanceVariable
       end
       private_class_method :authentication_client
 
@@ -248,29 +257,43 @@ module Angus
       #
       # @raise [ServiceConfigurationNotFound] When no configuration for the given service
       def self.service_configuration(code_name)
-        @services_configuration ||= load_services_configuration_file
+        load_configuration
 
-        @services_configuration[code_name] or
-          raise ServiceConfigurationNotFound, code_name
+        @monitor.synchronize do
+          config = @services_configuration[code_name]
+          raise ServiceConfigurationNotFound, code_name unless config
+
+          config.dup
+        end
       end
       private_class_method :service_configuration
 
       def self.set_service_configuration(code_name, version, configuration)
-        @services_configuration ||= load_services_configuration_file
-        @services_configuration[code_name] ||= {}
+        @monitor.synchronize do
+          load_configuration
+          @services_configuration[code_name] ||= {}
 
-        @services_configuration[code_name]["v#{version}"] = configuration.inject({}) do |config, entry|
-          k, v = entry
-          config.merge!({ k.to_s => v })
+          processed_config = {}
+          configuration.each { |k, v| processed_config[k.to_s] = v }
+
+          @services_configuration[code_name]["v#{version}"] = processed_config
         end
       end
       private_class_method :set_service_configuration
+
+      def self.load_configuration
+        @monitor.synchronize do
+          return if defined?(@services_configuration) && @services_configuration
+
+          @services_configuration = load_services_configuration_file
+        end
+      end
+      private_class_method :load_configuration
 
       def self.load_services_configuration_file
         return {} unless File.exist?(Settings.configuration_file)
 
         configuration = YAML.load_file(Settings.configuration_file)
-
         configuration = {} unless configuration.is_a?(Hash)
 
         configuration

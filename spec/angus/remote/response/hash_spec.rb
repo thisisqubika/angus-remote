@@ -4,7 +4,10 @@ require 'spec_helper'
 
 require 'angus/remote/response/hash'
 
+# rubocop:disable Metrics/BlockLength
 describe Angus::Remote::Response::Hash do
+  subject(:response) { response_class.new(elements) }
+
   let(:response_class) do
     Class.new do
       include Angus::Remote::Response::Hash
@@ -14,8 +17,6 @@ describe Angus::Remote::Response::Hash do
       end
     end
   end
-
-  subject(:response) { response_class.new(elements) }
 
   describe '#to_hash' do
     context 'when a elements has a single level' do
@@ -55,3 +56,4 @@ describe Angus::Remote::Response::Hash do
     end
   end
 end
+# rubocop:enable Metrics/BlockLength
