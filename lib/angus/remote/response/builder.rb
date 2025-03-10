@@ -46,7 +46,7 @@ module Angus
                                 service_definition, operation_namespace, operation_code_name)
         end
 
-        # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+        # rubocop:disable Metrics/AbcSize
         def self.build_from_definition(status_code, body, service_code_name, service_version,
                                        service_definition, operation_namespace, operation_code_name)
           representations = service_definition.representations
@@ -88,11 +88,9 @@ module Angus
           response.http_response_info[:operation_namespace] = operation_namespace
           response.http_response_info[:operation_code_name] = operation_code_name
 
-          fields = nil
-
           response
         end
-        # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
+        # rubocop:enable Metrics/AbcSize
 
         # Builds the methods for each value / object / array
         #
@@ -223,8 +221,6 @@ module Angus
             representation_class = Struct.new(*fields.keys, :elements)
             representation_object = representation_class.new(*fields.values, fields.transform_keys(&:to_s))
 
-            fields = nil
-
           elsif type.to_sym == :variable
             representation_object = build_from_variable_fields(hash_value)
           else
@@ -265,11 +261,7 @@ module Angus
           end
 
           representation_class = Struct.new(*fields.keys, :elements)
-          representation_object = representation_class.new(*fields.values, fields.transform_keys(&:to_s))
-
-          fields = nil
-
-          representation_object
+          representation_class.new(*fields.values, fields.transform_keys(&:to_s))
         end
 
         # Receives an array of representations and returns a hash of representations where

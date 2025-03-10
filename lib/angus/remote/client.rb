@@ -1,13 +1,17 @@
 # frozen_string_literal: true
 
 require 'json'
-require 'persistent_http'
+require 'net/http/persistent'
+require 'uri'
+require 'openssl'
 
 require_relative 'exceptions'
 require_relative 'utils'
 
 require_relative 'response/builder'
 require_relative 'settings'
+
+require_relative '../net/http/persistent/pool'
 
 module Angus
   module Remote
@@ -16,18 +20,18 @@ module Angus
       def initialize(api_url, timeout = nil, options = {})
         api_url = api_url[0..-2] if api_url[-1] == '/'
 
-        @connection = PersistentHTTP.new(
-          pool_size: options['pool_size'] || 10,
-          pool_timeout: 10,
-          warn_timeout: 0.25,
-          force_retry: false,
-          url: api_url,
+        @uri = URI.parse(api_url)
 
-          read_timeout: timeout,
-          open_timeout: timeout
+        @connection = Net::HTTP::Persistent.new(
+          name: "#{options['code_name']}.#{options['version']}",
+          pool_size: options['pool_size'] || 10
         )
 
-        @api_base_path = @connection.default_path
+        @connection.verify_mode = OpenSSL::SSL::VERIFY_NONE if @uri.scheme == 'https'
+        @connection.read_timeout = timeout if timeout
+        @connection.open_timeout = timeout if timeout
+
+        @api_base_path = @uri.path.empty? ? '' : @uri.path
 
         store_namespace = "#{options['code_name']}.#{options['version']}"
         client_settings = { public_key: options['public_key'],
@@ -55,19 +59,22 @@ module Angus
       #   see Utils.severe_error_response?
       # @raise [RemoteConnectionError] When the remote service refuses the connection.
       def make_request(path, method, encode_as_json, path_params, request_params)
-        path = @api_base_path + Utils.build_path(path, path_params)
+        request_path = @api_base_path + Utils.build_path(path, path_params)
 
-        request = Utils.build_request(method, path, request_params, encode_as_json)
+        request_uri = @uri.dup
+        request_uri.path = request_path
+
+        request = Utils.build_request(method, request_path, request_params, encode_as_json)
 
         begin
-          @authentication_client.prepare_request(request, method.upcase, path)
+          @authentication_client.prepare_request(request, method.upcase, request_path)
 
-          response = @connection.request(request)
+          response = @connection.request(request_uri, request)
 
           raise RemoteSevereError, get_error_messages(response.body) if Utils.severe_error_response?(response)
 
           response
-        rescue Errno::ECONNREFUSED, PersistentHTTP::Error => e
+        rescue Errno::ECONNREFUSED, Net::HTTP::Persistent::Error => e
           raise RemoteConnectionError, "#{@api_base_path} - #{e.class}: #{e.message}"
         end
       end

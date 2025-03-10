@@ -26,8 +26,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('angus-sdoc', '~> 0.0', '>= 0.0.6')
   spec.add_dependency('bigdecimal', '~> 3.1')
   spec.add_dependency('concurrent-ruby', '~> 1.3')
-
-  spec.add_dependency('persistent_http', '~> 2.0.3')
+  spec.add_dependency('net-http-persistent', '~> 4.0')
 
   spec.metadata['rubygems_mfa_required'] = 'true'
 end
