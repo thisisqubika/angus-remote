@@ -22,9 +22,9 @@ module Angus
         DateTime.iso8601(scalar)
       when :decimal
         begin
-          BigDecimal.new(scalar) # Para Ruby < 2.6
-        rescue TypeError, ArgumentError, NoMethodError
-          BigDecimal(scalar) # Para Ruby 2.6+, JRuby
+          BigDecimal(scalar) # Para Ruby 2.4+, JRuby
+        rescue NoMethodError
+          BigDecimal.new(scalar) # Para Ruby < 2.4
         end
       when :object
         scalar
