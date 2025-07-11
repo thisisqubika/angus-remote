@@ -21,10 +21,10 @@ module Angus
       when :date_time
         DateTime.iso8601(scalar)
       when :decimal
-        if BigDecimal.respond_to?(:new)
-          BigDecimal.new(scalar) # Para Ruby < 2.6
-        else
-          BigDecimal(scalar) # Para Ruby 2.6+
+        begin
+          BigDecimal(scalar) # Para Ruby 2.4+, JRuby
+        rescue NoMethodError
+          BigDecimal.new(scalar) # Para Ruby < 2.4
         end
       when :object
         scalar
