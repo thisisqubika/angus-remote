@@ -2,13 +2,10 @@ require 'bigdecimal'
 require 'date'
 require 'json'
 
+require 'active_support/core_ext/string/inflections'
+
 require_relative '../message'
-require_relative '../remote_response'
-
-require_relative 'hash'
-
 require_relative '../service_directory'
-
 
 # TODO: move to another gem and possibly change its name
 require_relative '../../unmarshalling'
@@ -57,16 +54,6 @@ module Angus
           json_response = JSON(body)
 
           fields = {}
-
-          fields[:status] = json_response['status']
-          fields[:status_code] = status_code
-          fields[:messages] = self.build_messages(json_response['messages'])
-          fields[:body] = body
-          fields[:service_code_name] = service_code_name
-          fields[:service_version] = service_version
-          fields[:operation_namespace] = operation_namespace
-          fields[:operation_code_name] = operation_code_name
-
           representations_hash = self.representations_hash(representations)
           glossary_terms_hash = glossary.terms_hash
 
@@ -76,15 +63,49 @@ module Angus
             fields[element.name.to_sym] = element_value
           end
 
-          response_class = Angus::Remote::RemoteResponse.new(*fields.keys, :elements)
-          response = response_class.new(*fields.values, fields.transform_keys(&:to_s))
+          # Esto tira un warning cada vez que el nombre de la clase se repite:
+          # warning: redefining constant Struct::SomethingResponse
+          # Evaluar si conviene hacer "repsonse_class = " o bien "ResponseClass = "
+          response_class = Struct.new("#{operation_code_name.camelcase}Response", *fields.keys) do
+            attr_reader :status, :status_code, :messages, :http_response_info
 
-          response.http_response_info[:status_code] = status_code
-          response.http_response_info[:body] = body
-          response.http_response_info[:service_code_name] = service_code_name
-          response.http_response_info[:service_version] = service_version
-          response.http_response_info[:operation_namespace] = operation_namespace
-          response.http_response_info[:operation_code_name] = operation_code_name
+            def initialize(status, status_code, messages, http_response_info, *args)
+              @status = status
+              @status_code = status_code
+              @messages = messages
+              @http_response_info = http_response_info
+
+              super(*args)
+            end
+
+            def to_hash
+              {
+                http_status_code: @http_response_info[:status_code],
+                body: @http_response_info[:body],
+                service_name: @http_response_info[:service_name],
+                operation_name: @http_response_info[:operation_name]
+              }
+            end
+
+            def elements
+              to_h.transform_keys(&:to_s)
+            end
+          end
+
+          response = response_class.new(
+            json_response['status'],
+            status_code,
+            build_messages(json_response['messages']),
+            {
+              status_code: status_code,
+              body: body,
+              service_name: service_code_name,
+              service_version: service_version,
+              operation_namespace: operation_namespace,
+              operation_name: operation_code_name
+            },
+            *fields.values
+          )
 
           fields = nil
           response_class = nil
@@ -216,8 +237,12 @@ module Angus
               fields[field.name.to_sym] = field_value
             end
 
-            representation_class = Struct.new(*fields.keys, :elements)
-            representation_object = representation_class.new(*fields.values, fields.transform_keys(&:to_s))
+            representation_class = Struct.new("#{type.to_s.camelcase}", *fields.keys) do
+              def elements
+                to_h.transform_keys(&:to_s)
+              end
+            end
+            representation_object = representation_class.new(*fields.values)
 
             fields = nil
             representation_class = nil
@@ -263,8 +288,12 @@ module Angus
             fields[key_name.to_sym] = field_value
           end
 
-          representation_class = Struct.new(*fields.keys, :elements)
-          representation_object = representation_class.new(*fields.values, fields.transform_keys(&:to_s))
+          representation_class = Struct.new(*fields.keys) do
+            def elements
+              to_h.transform_keys(&:to_s)
+            end
+          end
+          representation_object = representation_class.new(*fields.values)
 
           fields = nil
           representation_class = nil

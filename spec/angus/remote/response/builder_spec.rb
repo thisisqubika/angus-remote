@@ -2,8 +2,6 @@ require 'spec_helper'
 
 require 'angus/remote/response/builder'
 
-require 'angus/remote/remote_response'
-
 describe Angus::Remote::Response::Builder do
 
   subject(:builder) { Angus::Remote::Response::Builder }

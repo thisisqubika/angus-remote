@@ -22,6 +22,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency('angus-sdoc', '~> 0.0', '>= 0.0.6')
   spec.add_dependency('multipart-post', '>= 2.2')
   spec.add_dependency('persistent_http', '~> 2.0.3')
+  spec.add_dependency('activesupport')
 
   spec.add_development_dependency('ci_reporter', '~> 2.0.0')
   spec.add_development_dependency('fakefs')
