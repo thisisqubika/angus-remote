@@ -24,13 +24,13 @@ describe Angus::Remote::Client do
       allow(Angus::Authentication::Client).to receive(:new).and_return(authentication_client)
       allow(authentication_client).to receive(:prepare_request)
       allow(authentication_client).to receive(:store_session_private_key)
-      allow_any_instance_of(PersistentHTTP).to receive(:request).and_return(success_response)
+      allow_any_instance_of(Net::HTTP::Persistent).to receive(:request).and_return(success_response)
     end
 
     it 'prepares the request with authentication' do
       client.make_request('/users', 'get', false, [], {})
 
-      expect(authentication_client).to have_received(:prepare_request).with(kind_of(Net::HTTP::Get), 'GET', '//users')
+      expect(authentication_client).to have_received(:prepare_request).with(kind_of(Net::HTTP::Get), 'GET', '/users')
     end
 
     it 'returns the remote service response' do
@@ -64,7 +64,7 @@ describe Angus::Remote::Client do
     context 'when the remote service returns a severe error response' do
       let(:error_response) { double(:error_response, code: 500, body: '') }
 
-      before { allow_any_instance_of(PersistentHTTP).to receive(:request).and_return(error_response) }
+      before { allow_any_instance_of(Net::HTTP::Persistent).to receive(:request).and_return(error_response) }
 
       it 'raises RemoteSevereError' do
         expect do
@@ -74,7 +74,7 @@ describe Angus::Remote::Client do
     end
 
     context 'when the remote service rejects the connection' do
-      before { allow_any_instance_of(PersistentHTTP).to receive(:request).and_raise(Errno::ECONNREFUSED) }
+      before { allow_any_instance_of(Net::HTTP::Persistent).to receive(:request).and_raise(Errno::ECONNREFUSED) }
 
       it 'raises RemoteConnectionError' do
         expect do
