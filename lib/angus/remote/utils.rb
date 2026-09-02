@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'net/http'
 require 'uri'
 require 'securerandom'
 
@@ -42,10 +43,10 @@ module Angus
           request['Content-Type'] = "multipart/form-data; boundary=#{boundary}"
         elsif HTTP_METHODS_WITH_BODY.include?(method)
           request = build_base_request(method, uri.to_s)
-          request.body = URI.encode_www_form(params)
+          request.body = Http::QueryParams.to_params(params)
           request['Content-Type'] = 'application/x-www-form-urlencoded'
         else
-          uri.query = URI.encode_www_form(params)
+          uri.query = Http::QueryParams.to_params(params)
           request = build_base_request(method, uri.to_s)
         end
 
