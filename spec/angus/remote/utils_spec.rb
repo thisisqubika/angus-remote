@@ -124,6 +124,18 @@ describe Angus::Remote::Utils do
     it_behaves_like 'a method with body', 'post'
     it_behaves_like 'a method with body', 'put'
 
+    context 'when a param is an array' do
+      subject(:request) { utils.build_normal_request('put', '/listing', { ids: %w[a b] }) }
+
+      its(:body) { is_expected.to eq('ids[]=a&ids[]=b') }
+    end
+
+    context 'when a param is an array and the method has no body' do
+      subject(:request) { utils.build_normal_request('get', '/listing', { ids: %w[a b] }) }
+
+      its(:path) { is_expected.to eq('/listing?ids[]=a&ids[]=b') }
+    end
+
     context 'when it is a multipart request' do
       let(:file_name) { 'some_file.txt' }
 
